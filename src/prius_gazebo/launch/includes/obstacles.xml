@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<!-- Generate moving obstacle -->
+  <!-- obstacle launch file-->
+<group ns="/obs1">
+  <!-- tf_prefix works like namespace for /tf, which usually don't have namespace -->
+  <param name="tf_prefix" value="obs1_tf" />
+  <include file="$(find od_control)/launch/single_obs_control.launch">
+     <arg name="init_pose" value="-x 10.0 -y 0.0 -z 0.0 -R 0.0 -P 0.0 -Y 0.0" />
+     <arg name="robot_ns" value="obs1"/>
+  </include>
+</group>
+
+</launch>

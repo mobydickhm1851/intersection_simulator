@@ -1,0 +1,25 @@
+
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+  # Position Controllers ---------------------------------------
+  obs1_x_joint_controller:
+    type: position_controllers/JointPositionController
+    joint: obs1_x_joint
+    pid: {p: 100.0, i: 0.01, d: 1.0}
+  obs1_y_joint_controller:
+    type: position_controllers/JointPositionController
+    joint: obs1_y_joint
+    pid: {p: 100.0, i: 0.01, d: 1.0}
+
+   # Using position_controller to control the joint position doesn't need the PID control since the interface used to comunicate with joint is of the same type.
+#  obs1_x_joint_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: obs1_x_joint
+#    pid: {p: 1.0, i: 0.01, d: 0.5}
+#  obs1_y_joint_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: obs1_y_joint
+#    pid: {p: 1.0, i: 3, d: 1.0}

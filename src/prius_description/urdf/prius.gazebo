@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<robot name="solab_prius" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+<!-- Gazebo plugins -->
+
+<gazebo>
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/solab_prius</robotNamespace>
+    <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+  </plugin>
+</gazebo>
+
+
+</robot>
+

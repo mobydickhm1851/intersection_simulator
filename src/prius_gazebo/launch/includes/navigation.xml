@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="init_x" default="0.0" />
+    <arg name="init_y" default="0.0" />
+    <arg name="init_a" default="0.0" />
+
+    <!-- Map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find od_gazebo)/maps/walls_gas_station.yaml"/>
+	
+    <!-- AMCL -->
+    <include file="$(find solabot_navigation)/launch/includes/simulator/racecar_amcl.xml">
+        <arg name="init_x" value="$(arg init_x)"/>
+        <arg name="init_y" value="$(arg init_y)"/>
+        <arg name="init_a" value="$(arg init_a)"/>
+    </include>
+
+    <!-- teb move base navigation --> 
+    <!-- teb local planner -->
+    <include file="$(find solabot_navigation)/launch/includes/simulator/move_base_teb.xml"/>
+
+    <!-- turtle move base navigation  -->
+    <!-- general usage of move base => differential drive  
+    <include file="$(find solabot_navigation)/launch/includes/simulator/move_base_turtle.xml"/>
+-->
+    <!-- sbpl move base navigation -->
+    <!-- sbpl lattices planner global planner 
+    <include file="$(find solabot_navigation)/launch/includes/simulator/move_base_sbpl.xml"/>
+-->
+    <!-- hypha move base navigation -->
+    <!-- hypha tuned 
+    <include file="$(find solabot_navigation)/launch/includes/simulator/move_base.xml"/>
+-->
+</launch>

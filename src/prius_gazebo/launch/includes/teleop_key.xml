@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<!-- key teleop -->
+<!--============-->
+    <node pkg="od_control" type="teleop_key.py" name="teleop_key">
+	<remap from="/teleop_key/cmd_vel" to="/cmd_vel"/>
+    </node>
+
+</launch>

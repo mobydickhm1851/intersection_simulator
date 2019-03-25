@@ -1,0 +1,29 @@
+<?xml version='1.0'?>
+
+<launch>
+
+  <arg name="use_rviz" default="true" /> 
+  <arg name="teleop_joy" default="true" /> 
+
+  <include file="$(find prius_gazebo)/launch/intersection.launch"/>
+
+  <!-- joy stick teleop -->
+  <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
+    <arg name="joy_maxVel" value="1.0" />
+    <arg name="joy_accele" value="0.035"/>
+  </include>
+  
+  <!-- keyboard teleop -->
+  <include file="$(find prius_gazebo)/launch/includes/teleop_key.xml"  unless="$(arg teleop_joy)" />
+  
+  <!-- gmapping 
+  <include file="$(find solabot_navigation)/launch/includes/simulator/racecar_gmapping.xml"/>
+-->
+
+  <!-- navigation--> 
+  <include file="$(find prius_gazebo)/launch/includes/navigation.xml"/>
+
+  <!-- rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/intersection_experiment.rviz" if="$(arg use_rviz)" />
+
+</launch>
