@@ -3,16 +3,18 @@
 import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Joy
-
+import time
 
 
 
 maxVel = 1.0
 minVel = -maxVel
 accele = 0.005
-brake = accele*1.86
+brake = accele*2.86
 friction = accele/3
+
 car_vel = 0.0
+car_ang = 0.0
 
 minAng = -1.5
 maxAng = 1.5
@@ -21,24 +23,55 @@ maxAng = 1.5
 throttleInit = False
 brakeInit = False
 
-
+# gear state (D/N/R, sum(gear)=1/sum(gear)=0/sum(gear)=-1)
+gear = [1,-1]
 
 # we set the input of acceleration and deceleration to have two input for multiple cars in the future
+
+# dir=true: shift up; dir=false: shift down
+def shift_gear(dir_gear):
+    global gear
+
+    if dir_gear:   # shift up
+
+        if sum(gear) == 1 : gear = [1,0]
+        elif sum(gear) == 0 : gear = [1,0]
+        elif sum(gear) == -1 : gear = [1,-1]
+
+    else:   # shift down
+
+        if sum(gear) == 1 : gear = [1,-1]
+        elif sum(gear) == 0 : gear = [0,-1]
+        elif sum(gear) == -1 : gear = [0,-1]
+
+
 
 def fmap (toMap, in_min, in_max, out_min, out_max):
 
     return (toMap - in_min)*(out_max - out_min) / (in_max -in_min) + out_min;
 
 
-def linearVel(v, joy_acc):
+def linearAcc(v, joy_acc):
 
-    accele_mapped = fmap(joy_acc, -1.0, 1.0, -accele, accele)
-    v_cand = v + accele_mapped
-    
-    if accele_mapped >= 0.0:
+    if sum(gear) == 1 :  # gear in D
+
+        accele_mapped = fmap(joy_acc, 0, 1.0, 0, accele)
+        v_cand = v + accele_mapped
+        
         return min(v_cand, maxVel)
 
-    else:
+
+    elif sum(gear) == 0 :  # gear in N
+
+        
+        return v
+
+
+    elif sum(gear) == -1 :  # gear in R
+
+        accele_mapped = fmap(joy_acc, 0, 1.0, 0, accele)
+        v_cand = v - accele_mapped
+        
         return max(v_cand, minVel)
 
 
@@ -72,10 +105,11 @@ def goSlide(v):
         v_cand = v + friction
         return min(v_cand, 0)
 
-
+# initialize time stamp
+last_time_stamp = time.time()
 
 def carMotion(joy_data):
-    global car_vel, throttleInit, brakeInit
+    global car_vel, car_ang, throttleInit, brakeInit, last_time_stamp
 
     # Check if axes are triggered to avoid NoneType passing
 
@@ -86,20 +120,42 @@ def carMotion(joy_data):
     #===========================#
 
 
+    #=====================#
+    #=== Shifting Gear ===#
+    #=====================#
+
+    # not continuous publish
+    now_time_stamp = time.time() 
+    time_diff = now_time_stamp - last_time_stamp
+
+    min_time = 0.3
+
+    if joy_data.buttons[6] and time_diff >= min_time :
+
+        shift_gear(False)
+        last_time_stamp = time.time()
+
+    elif joy_data.buttons[7] and time_diff >= min_time :
+
+        shift_gear(True)
+        last_time_stamp = time.time()
+
+    
+
 
     #======================#
     #=== Linear Control ===#
     #======================#
 
-    throttleInit = joy_data.axes[3] != 0
-    brakeInit = joy_data.axes[1] != 0
+    throttleInit = joy_data.axes[3] > 0
+    brakeInit = joy_data.axes[3] < 0
 
     if throttleInit:
-        car_vel = linearVel(car_vel, joy_data.axes[3])
+        car_vel = linearAcc(car_vel, joy_data.axes[3])
 
     # It's hard to step on both throttle and brake
     elif brakeInit:
-        car_vel = stepBrake(car_vel, joy_data.axes[1])
+        car_vel = stepBrake(car_vel, joy_data.axes[3])
 
     else:
         car_vel = goSlide(car_vel)
@@ -112,17 +168,6 @@ def carMotion(joy_data):
 
     car_ang = fmap(joy_data.axes[0], -1.0, 1.0, minAng, maxAng)
     
-
-    #=======================#
-    #=== Publish cmd_vel ===#
-    #=======================#
-
-    twist0 = Twist()
-    twist0.linear.x = car_vel; twist0.linear.y = 0; twist0.linear.z = 0
-    twist0.angular.x = 0; twist0.angular.y = 0; twist0.angular.z = car_ang
-
-    pub.publish(twist0)
-
 
 
 def main():
@@ -139,8 +184,25 @@ def main():
     rate = rospy.Rate(100) # default is 10
    
 
-    while True:
-       
+    while not rospy.is_shutdown():
+    
+        #=======================#
+        #=== Publish cmd_vel ===#
+        #=======================#
+
+        twist0 = Twist()
+        twist0.linear.x = car_vel; twist0.linear.y = 0; twist0.linear.z = 0
+        twist0.angular.x = 0; twist0.angular.y = 0; twist0.angular.z = car_ang
+
+        pub.publish(twist0)
+
+
+        if sum(gear) == 1: mode = 1
+        elif sum(gear) == 0: mode = 0
+        elif sum(gear) == -1: mode = -1
+
+        #rospy.loginfo("Now the gear mode is:".format(mode))
+        print("Now the gear mode is:{0}".format(mode))
 
         rate.sleep()
 

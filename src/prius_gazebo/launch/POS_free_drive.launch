@@ -2,10 +2,17 @@
 
 <launch>
 
+  <arg name="intersection" default="true" />
+  <arg name="mcity" default="false" />
+
   <arg name="use_rviz" default="true" /> 
   <arg name="teleop_joy" default="true" /> 
 
-  <include file="$(find prius_gazebo)/launch/intersection.launch"/>
+  <!-- intersection world -->
+  <include file="$(find prius_gazebo)/launch/intersection.launch" if="$(arg intersection)"/>
+
+  <!-- mcity world -->
+  <include file="$(find prius_gazebo)/launch/mcity.launch" if="$(arg mcity)"/>
 
   <!-- joy stick teleop -->
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >

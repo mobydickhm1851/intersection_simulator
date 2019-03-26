@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="use_od" default="true" /> 
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find prius_gazebo)/worlds/mcity.world"/>
+    <!-- more default parameters can be changed here -->
+  </include>
+
+
+<!-- Generation of racecar and detectors: lidar, camera, zed(?) -->
+  <include file="$(find prius_gazebo)/launch/includes/prius.xml">
+      <arg name="init_pose" value="-x 0 -y 10 -z 0 -Y -1.57" />
+  </include>
+
+<!-- Generation of moving obstacle 
+  <include file="$(find od_gazebo)/launch/includes/obstacles.xml" if="$(arg use_od)"/>
+-->
+
+</launch>
