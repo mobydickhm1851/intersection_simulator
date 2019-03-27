@@ -26,7 +26,6 @@
   <!-- gmapping 
   <include file="$(find solabot_navigation)/launch/includes/simulator/racecar_gmapping.xml"/>
 -->
-
   <!-- navigation--> 
   <include file="$(find prius_gazebo)/launch/includes/navigation.xml"/>
 

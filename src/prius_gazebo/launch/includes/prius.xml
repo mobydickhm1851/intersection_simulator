@@ -12,7 +12,9 @@
 
 
   <!-- Spawn a robot into Gazebo -->
-  <node name="spawn_$(arg robot_name)_urdf" pkg="gazebo_ros" type="spawn_model" output="screen" args="-param robot_description -urdf $(arg init_pose) -model $(arg robot_name) " />
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" output="screen" args="-param robot_description -urdf $(arg init_pose) -model $(arg robot_name) " />
+
+
   <!-- ros_control racecar launch file -->
   <include file="$(find prius_control)/launch/prius_control.launch" >
     <arg name="robot_ns" value="$(arg robot_name)" />

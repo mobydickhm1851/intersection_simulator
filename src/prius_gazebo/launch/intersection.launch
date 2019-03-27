@@ -15,12 +15,10 @@
 
 <!-- Generation of racecar and detectors: lidar, camera, zed(?) -->
 <!-- Begin of prius0 -->
-  <group ns="prius0">  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
       <arg name="init_pose" value="-x 0 -y 10 -z 0 -Y -1.57" />
       <arg name="robot_name" value="solab_prius" />
     </include>
-  </group>
 
 
 <!-- Begin of prius1 

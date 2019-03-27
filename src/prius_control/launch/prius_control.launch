@@ -27,7 +27,7 @@
   </node>
 
   <!-- Allow for Gazebo to broadcast odom, publish tf from /map -> /odom --> 
-  <node pkg="racecar_gazebo" name="gazebo_odometry_node" type="gazebo_odometry_notransform.py">
+  <node pkg="prius_gazebo" name="gazebo_odometry_node" type="gazebo_odometry_notransform.py">
   </node>
 
 </launch>
