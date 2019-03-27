@@ -18,6 +18,7 @@
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
     <arg name="joy_maxVel" value="1.0" />
     <arg name="joy_accele" value="0.035"/>
+    <arg name="cmd_ns" value="prius0" />
   </include>
   
   <!-- keyboard teleop -->

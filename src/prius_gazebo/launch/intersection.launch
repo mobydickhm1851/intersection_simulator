@@ -9,27 +9,36 @@
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find prius_gazebo)/worlds/intersection.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="recording" value="false"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="true"/>
     <!-- more default parameters can be changed here -->
   </include>
 
 
 <!-- Generation of racecar and detectors: lidar, camera, zed(?) -->
 <!-- Begin of prius0 -->
+  <group ns="prius0">  
+    <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 0 -y 10 -z 0 -Y -1.57" />
-      <arg name="robot_name" value="solab_prius" />
-    </include>
-
-
-<!-- Begin of prius1 
-  <group ns="prius1">  
-    <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 0 -y -30 -z 0 -Y -1.57" />
-      <arg name="robot_name" value="Prius1" />
+      <arg name="init_pose" value="-x 1 -y 10 -z 0 -Y -1.57" />
+      <arg name="robot_name" value="prius0" />
     </include>
   </group>
 
--->
+
+<!-- Begin of prius1 -->
+  <group ns="prius1">  
+    <param name="tf_prefix" value="prius1" />  
+    <include file="$(find prius_gazebo)/launch/includes/prius.xml">
+      <arg name="init_pose" value="-x 1 -y -10 -z 0 -Y -1.57" />
+      <arg name="robot_name" value="prius1" />
+    </include>
+  </group>
+
 
 
 <!-- Generation of moving obstacle 

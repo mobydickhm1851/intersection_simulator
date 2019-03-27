@@ -4,11 +4,12 @@
 
     <arg name="joy_maxVel" />
     <arg name="joy_accele" />
+    <arg name="cmd_ns" />
 
 <!-- key teleop -->
 <!--============-->
     <node pkg="prius_control" type="solabot_teleop_joy_gear.py" name="teleop_joy">
-	    <remap from="/car/cmd_vel" to="/cmd_vel"/>
+        <remap from="/car/cmd_vel" to="/$(arg cmd_ns)/cmd_vel"/>
         <param name="max_velocity" value="$(arg joy_maxVel)" />
         <param name="acceleration" value="$(arg joy_accele)" />
     </node>

@@ -7,7 +7,7 @@
   <rosparam file="$(find prius_control)/config/prius_control.yaml" command="load"/>
 
   <!-- load the controllers -->
-  <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/$(arg robot_ns)" args="rear_left_wheel_velocity_controller rear_right_wheel_velocity_controller
+  <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="rear_left_wheel_velocity_controller rear_right_wheel_velocity_controller
                                             front_left_wheel_velocity_controller front_right_wheel_velocity_controller
                                             front_left_steer_position_controller front_right_steer_position_controller
                                             joint_state_controller"/>
@@ -19,15 +19,13 @@
 
   <!-- convert joint states to TF transforms for rviz, etc -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
-   <remap from="/joint_states" to="/$(arg robot_ns)/joint_states" /> 
+    <param name="publish_frequency" type="double" value="30.0" />
+    <param name="tf_prefix" value="$(arg robot_ns)"/>
   </node> 
   
   <!-- driving node -->
-  <node pkg="prius_control" type="prius_driving_commands.py" name="servo_commands" output="screen">
+  <node pkg="prius_control" type="$(arg robot_ns)_driving_commands.py" name="servo_commands" output="screen">
   </node>
 
-  <!-- Allow for Gazebo to broadcast odom, publish tf from /map -> /odom --> 
-  <node pkg="prius_gazebo" name="gazebo_odometry_node" type="gazebo_odometry_notransform.py">
-  </node>
 
 </launch>
