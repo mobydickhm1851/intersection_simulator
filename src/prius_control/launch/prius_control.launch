@@ -1,12 +1,13 @@
 <?xml version='1.0'?>
-
 <launch>
   
+  <arg name="robot_ns"/>
+
   <!-- Load joint controller configurations from YAML file to parameter server -->
   <rosparam file="$(find prius_control)/config/prius_control.yaml" command="load"/>
 
   <!-- load the controllers -->
-  <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/solab_prius" args="rear_left_wheel_velocity_controller rear_right_wheel_velocity_controller
+  <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/$(arg robot_ns)" args="rear_left_wheel_velocity_controller rear_right_wheel_velocity_controller
                                             front_left_wheel_velocity_controller front_right_wheel_velocity_controller
                                             front_left_steer_position_controller front_right_steer_position_controller
                                             joint_state_controller"/>
@@ -18,10 +19,10 @@
 
   <!-- convert joint states to TF transforms for rviz, etc -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
-   <remap from="/joint_states" to="/solab_prius/joint_states" /> 
+   <remap from="/joint_states" to="/$(arg robot_ns)/joint_states" /> 
   </node> 
   
-  <!-- servo node -->
+  <!-- driving node -->
   <node pkg="prius_control" type="prius_driving_commands.py" name="servo_commands" output="screen">
   </node>
 
