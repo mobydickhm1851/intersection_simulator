@@ -2,17 +2,24 @@
 
 <launch>
 
+<!--    
   <arg name="intersection" default="true" />
   <arg name="mcity" default="false" />
+-->
+  <arg name="single" default="true" />
 
   <arg name="use_rviz" default="true" /> 
   <arg name="teleop_joy" default="true" /> 
 
-  <!-- intersection world -->
-  <include file="$(find prius_gazebo)/launch/intersection.launch" if="$(arg intersection)"/>
+  <!-- single car -->
+  <include file="$(find prius_gazebo)/launch/single_car_intersection.launch" if="$(arg single)"/>
 
-  <!-- mcity world -->
+  <!-- multi car -->
+  <include file="$(find prius_gazebo)/launch/multi_cars_intersection.launch" unless="$(arg single)"/>
+
+  <!-- mcity world 
   <include file="$(find prius_gazebo)/launch/mcity.launch" if="$(arg mcity)"/>
+-->
 
   <!-- joy stick teleop -->
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
@@ -28,7 +35,12 @@
   <include file="$(find solabot_navigation)/launch/includes/simulator/racecar_gmapping.xml"/>
 -->
   <!-- navigation--> 
-  <include file="$(find prius_gazebo)/launch/includes/navigation.xml"/>
+  <include file="$(find prius_gazebo)/launch/includes/localization.xml">
+    <arg name="robot_ns" value="prius0" />
+    <arg name="init_x" value="0.0" />
+    <arg name="init_y" value="0.0" />
+    <arg name="init_a" value="0.0" />
+  </include>
 
   <!-- rviz -->
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/intersection_experiment.rviz" if="$(arg use_rviz)" />

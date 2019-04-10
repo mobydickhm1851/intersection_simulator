@@ -16,9 +16,9 @@
     </include>
 
     <!-- teb move base navigation --> 
-    <!-- teb local planner 
+    <!-- teb local planner --> 
     <include file="$(find solabot_navigation)/launch/includes/simulator/move_base_teb.xml"/>
--->
+
     <!-- turtle move base navigation  -->
     <!-- general usage of move base => differential drive  
     <include file="$(find solabot_navigation)/launch/includes/simulator/move_base_turtle.xml"/>

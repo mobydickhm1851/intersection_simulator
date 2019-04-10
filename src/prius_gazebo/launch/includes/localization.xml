@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+
+<launch>
+    <arg name="robot_ns" />
+
+    <arg name="init_x" default="0.0" />
+    <arg name="init_y" default="0.0" />
+    <arg name="init_a" default="0.0" />
+
+    <!-- Map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find prius_gazebo)/maps/intersection.yaml"/>
+	
+    <!-- AMCL -->
+
+    <include file="$(find prius_gazebo)/launch/includes/amcl.xml">
+        <arg name="robot_ns" value="$(arg robot_ns)"/>
+        <arg name="init_x" value="$(arg init_x)"/>
+        <arg name="init_y" value="$(arg init_y)"/>
+        <arg name="init_a" value="$(arg init_a)"/>
+    </include>
+
+</launch>
