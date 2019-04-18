@@ -15,9 +15,13 @@ import numpy as np
 import math
 import tf2_ros
 
+
+robot_ns = rospy.get_param('/prius1/gazebo_odometry_node/robot_ns', 0.1) 
+
+
 class OdometryNode:
     # Set publishers
-    pub_odom = rospy.Publisher('/vesc/odom', Odometry, queue_size=1)
+    pub_odom = rospy.Publisher('/{0}/vesc/odom'.format(robot_ns), Odometry, queue_size=1)
 
     def __init__(self):
         # init internals
@@ -36,7 +40,7 @@ class OdometryNode:
     def sub_robot_pose_update(self, msg):
         # Find the index of the racecar
         try:
-            arrayIndex = msg.name.index('solab_prius::base_footprint')
+            arrayIndex = msg.name.index('{0}::base_footprint'.format(robot_ns))
         except ValueError as e:
             # Wait for Gazebo to startup
             pass
@@ -52,8 +56,8 @@ class OdometryNode:
 
         cmd = Odometry()
         cmd.header.stamp = self.last_recieved_stamp
-        cmd.header.frame_id = 'odom'
-        cmd.child_frame_id = 'base_footprint'
+        cmd.header.frame_id = '/{0}/odom'.format(robot_ns)
+        cmd.child_frame_id = '/{0}/base_footprint'.format(robot_ns)
         cmd.pose.pose = self.last_received_pose
         cmd.twist.twist = self.last_received_twist
         self.pub_odom.publish(cmd)
@@ -73,6 +77,6 @@ class OdometryNode:
 
 # Start the node
 if __name__ == '__main__':
-    rospy.init_node("gazebo_odometry_node")
+    rospy.init_node("{0}_gazebo_odometry_node".format(robot_ns))
     node = OdometryNode()
     rospy.spin()

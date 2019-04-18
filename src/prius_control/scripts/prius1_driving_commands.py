@@ -12,13 +12,13 @@ def set_throttle_steer(data):
 
     global flag_move
 
-    pub_vel_left_rear_wheel = rospy.Publisher('/solab_prius/rear_left_wheel_velocity_controller/command', Float64, queue_size=1)
-    pub_vel_right_rear_wheel = rospy.Publisher('/solab_prius/rear_right_wheel_velocity_controller/command', Float64, queue_size=1)
-    pub_vel_left_front_wheel = rospy.Publisher('/solab_prius/front_left_wheel_velocity_controller/command', Float64, queue_size=1)
-    pub_vel_right_front_wheel = rospy.Publisher('/solab_prius/front_right_wheel_velocity_controller/command', Float64, queue_size=1)
+    pub_vel_left_rear_wheel = rospy.Publisher('/prius1/rear_left_wheel_velocity_controller/command', Float64, queue_size=1)
+    pub_vel_right_rear_wheel = rospy.Publisher('/prius1/rear_right_wheel_velocity_controller/command', Float64, queue_size=1)
+    pub_vel_left_front_wheel = rospy.Publisher('/prius1/front_left_wheel_velocity_controller/command', Float64, queue_size=1)
+    pub_vel_right_front_wheel = rospy.Publisher('/prius1/front_right_wheel_velocity_controller/command', Float64, queue_size=1)
 
-    pub_pos_left_steering_hinge = rospy.Publisher('/solab_prius/front_left_steer_position_controller/command', Float64, queue_size=1)
-    pub_pos_right_steering_hinge = rospy.Publisher('/solab_prius/front_right_steer_position_controller/command', Float64, queue_size=1)
+    pub_pos_left_steering_hinge = rospy.Publisher('/prius1/front_left_steer_position_controller/command', Float64, queue_size=1)
+    pub_pos_right_steering_hinge = rospy.Publisher('/prius1/front_right_steer_position_controller/command', Float64, queue_size=1)
 
     throttle = data.linear.x/0.1
     steer = data.angular.z/2.3
@@ -32,9 +32,9 @@ def set_throttle_steer(data):
 
 def servo_commands():
 
-    rospy.init_node('prius_dirving_commands', anonymous=True)
+    rospy.init_node('prius1_dirving_commands', anonymous=True)
 
-    rospy.Subscriber("/cmd_vel", Twist, set_throttle_steer)
+    rospy.Subscriber("/prius1/cmd_vel", Twist, set_throttle_steer)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

@@ -8,8 +8,6 @@
     <arg name="init_y" default="0.0" />
     <arg name="init_a" default="0.0" />
 
-    <!-- Map server -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find prius_gazebo)/maps/intersection.yaml"/>
 	
     <!-- AMCL -->
 

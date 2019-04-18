@@ -173,13 +173,14 @@ def carMotion(joy_data):
 def main():
     global pub, maxVel, accele
 
-    maxVel = rospy.get_param('/teleop_joy/max_velocity', 5.0) # default is 5.0
-    accele = rospy.get_param('/toeleop_joy/acceleration', 0.035) # default is 0.035
+    robot_ns = rospy.get_param('/prius1_teleop_joy/robot_ns') 
+    maxVel = rospy.get_param('/{0}_teleop_joy/max_velocity'.format(robot_ns), 5.0) # default is 5.0
+    accele = rospy.get_param('/{0}_toeleop_joy/acceleration'.format(robot_ns), 0.035) # default is 0.035
 
-    rospy.init_node('teleop_joy', anonymous=True)
+    rospy.init_node('{0}_teleop_joy'.format(robot_ns), anonymous=True)
     
-    pub = rospy.Publisher('/car/cmd_vel', Twist, queue_size=5)
-    joy_sub = rospy.Subscriber("/joy", Joy, carMotion)
+    pub = rospy.Publisher('/{0}/cmd_vel'.format(robot_ns), Twist, queue_size=5)
+    joy_sub = rospy.Subscriber("/{0}/joy".format(robot_ns), Joy, carMotion)
 
     rate = rospy.Rate(100) # default is 10
    
@@ -202,7 +203,7 @@ def main():
         elif sum(gear) == -1: mode = -1
 
         #rospy.loginfo("Now the gear mode is:".format(mode))
-        print("Now the gear mode is:{0}".format(mode))
+        print("Now the gear mode of {1} is:{0}".format(mode, robot_ns))
 
         rate.sleep()
 

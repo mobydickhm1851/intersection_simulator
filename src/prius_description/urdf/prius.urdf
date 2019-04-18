@@ -666,9 +666,9 @@
       <plugin name="front_camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>/prius/front_camera</cameraName>
+        <cameraName>/front_camera</cameraName>
         <imageTopicName>image_raw</imageTopicName>
-        <cameraInfoTopicName>/prius/front_camera_info</cameraInfoTopicName>
+        <cameraInfoTopicName>/front_camera_info</cameraInfoTopicName>
         <frameName>front_camera_link</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
@@ -703,9 +703,9 @@
       <plugin name="back_camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>/prius/back_camera</cameraName>
+        <cameraName>/back_camera</cameraName>
         <imageTopicName>image_raw</imageTopicName>
-        <cameraInfoTopicName>/prius/back_camera_info</cameraInfoTopicName>
+        <cameraInfoTopicName>/back_camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
@@ -740,9 +740,9 @@
       <plugin name="left_camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>/prius/left_camera</cameraName>
+        <cameraName>/left_camera</cameraName>
         <imageTopicName>image_raw</imageTopicName>
-        <cameraInfoTopicName>/prius/left_camera_info</cameraInfoTopicName>
+        <cameraInfoTopicName>/left_camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
@@ -777,9 +777,9 @@
       <plugin name="right_camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>/prius/right_camera</cameraName>
+        <cameraName>/right_camera</cameraName>
         <imageTopicName>image_raw</imageTopicName>
-        <cameraInfoTopicName>/prius/right_camera_info</cameraInfoTopicName>
+        <cameraInfoTopicName>/right_camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
