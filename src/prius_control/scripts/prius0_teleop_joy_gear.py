@@ -77,6 +77,7 @@ def linearAcc(v, joy_acc):
 
 def stepBrake(v, joy_brake):
     
+    brake = 2.86*accele
     # Left-axes down as brake, otherwise wont affect the cmd_vel 
     if joy_brake < 0:
 
@@ -175,7 +176,7 @@ def main():
 
     robot_ns = rospy.get_param('/prius0_teleop_joy/robot_ns') 
     maxVel = rospy.get_param('/{0}_teleop_joy/max_velocity'.format(robot_ns), 5.0) # default is 5.0
-    accele = rospy.get_param('/{0}_toeleop_joy/acceleration'.format(robot_ns), 0.035) # default is 0.035
+    accele = rospy.get_param('/{0}_teleop_joy/acceleration'.format(robot_ns), 0.035) # default is 0.035
 
     rospy.init_node('{0}_teleop_joy'.format(robot_ns), anonymous=True)
     

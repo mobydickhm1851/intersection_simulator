@@ -23,8 +23,8 @@
 
   <!-- joy stick teleop (1 or 2 cars) -->
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
-    <arg name="joy_maxVel" value="3.0" />
-    <arg name="joy_accele" value="0.035"/>
+    <arg name="joy_maxVel" value="2.5" />
+    <arg name="joy_accele" value="0.055"/>
   </include>
   
   <!-- keyboard teleop (only 1 car) -->
@@ -59,7 +59,7 @@
   <!-- END OF LOCALIZATION -->
 
   <!-- rviz -->
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/intersection_experiment.rviz" if="$(arg use_rviz)" />
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/prius0_intersection_experiment.rviz" if="$(arg use_rviz)" />
 
 
   <!-- =============  rosbag  ============== -->
