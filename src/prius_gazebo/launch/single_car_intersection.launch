@@ -24,15 +24,38 @@
   <group ns="prius0">  
     <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 1 -y 10 -z 0 -Y -1.57" />
+      <arg name="init_pose" value="-x 1 -y 20 -z 0 -Y -1.57" />
       <arg name="robot_name" value="prius0" />
     </include>
   </group>
 
 
+<!-- Begin of prius1, moving along x-dir -->
+  <group ns="prius1">  
+    <param name="tf_prefix" value="prius1" />  
+    <include file="$(find prius_gazebo)/launch/includes/prius.xml">
+      <arg name="init_pose" value="-x 30 -y -1 -z 0 -Y 3.14" />
+      <arg name="robot_name" value="prius1" />
+    </include>
+  </group>
 
-<!-- Generation of moving obstacle 
-  <include file="$(find od_gazebo)/launch/includes/obstacles.xml" if="$(arg use_od)"/>
+
+  <!-- ============= navigation of cars ============  
+  <node name="car0_nav" type="car0_linear_nav.py" pkg="moby_stage" launch-prefix="xterm -e python -m pdb">
 -->
+  <arg name="cmap_size_default" default="65" />
+      
+  <node name="prius1_nav" type="prius1_linear_nav.py" pkg="prius_control" >
+    <param name="robot_ns" value="prius1" />
+    <param name="init_vel" type="double" value="1.0" />
+    <param name="cmap_size" type="double" value="$(arg cmap_size_default)" />
+  </node>
+
+  <!-- ==== costmap visualization ==== -->
+  <node name="prius1_costmap_plot" type="prius1_costmap_plot.py" pkg="prius_control" >
+    <param name="robot_ns" value="prius1" />
+    <param name="cmap_size" type="double" value="$(arg cmap_size_default)" />
+  </node>
+
 
 </launch>

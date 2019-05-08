@@ -11,7 +11,7 @@
     <arg name="world_name" value="$(find prius_gazebo)/worlds/intersection.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
+    <arg name="gui" value="false"/>
     <arg name="recording" value="false"/>
     <arg name="debug" value="false"/>
     <arg name="verbose" value="true"/>
@@ -20,21 +20,21 @@
 
 
 <!-- Generation of racecar and detectors: lidar, camera, zed(?) -->
-<!-- Begin of prius0 -->
+<!-- Begin of prius0, moving along y-dir -->
   <group ns="prius0">  
     <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 1 -y 10 -z 0 -Y -1.57" />
+      <arg name="init_pose" value="-x -1 -y 30 -z 0 -Y -1.57" />
       <arg name="robot_name" value="prius0" />
     </include>
   </group>
 
 
-<!-- Begin of prius1 -->
+<!-- Begin of prius1, moving along x-dir -->
   <group ns="prius1">  
     <param name="tf_prefix" value="prius1" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 1 -y -10 -z 0 -Y 1.57" />
+      <arg name="init_pose" value="-x -30 -y 1 -z 0 -Y 0" />
       <arg name="robot_name" value="prius1" />
     </include>
   </group>
