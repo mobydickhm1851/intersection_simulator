@@ -25,7 +25,7 @@ map_res = rospy.get_param('/prius1_costmap_plot/cmap_res', 0.1) # default is 1.0
 map_size = rospy.get_param('/prius1_costmap_plot/cmap_size', 45) # default is 45
 update.init_map(map_res, map_size)
 
-costmap = np.array(0.2 * np.random.randn(2, map_size/map_res, map_size/map_res) + 0.5, dtype=np.float32)
+costmap = np.array(0.2 * np.random.randn(45, map_size/map_res, map_size/map_res) + 0.5, dtype=np.float32)
 
 car_pose_update = update.car_pose
 
@@ -86,7 +86,7 @@ def plot_update(i, scat, scat_car_pose):
     ###----------------###
     ### Costmap update ###
     ###----------------###
-    arr = costmap[0]
+    arr = costmap[40]
     zz = arr.transpose().reshape(1,-1)[0]
 
     # set_array control the "color array"

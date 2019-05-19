@@ -19,7 +19,7 @@ from scipy.stats import norm
 # ====== global variable ======= #
 
 # Initialize
-map_res = 1.0
+map_res = 0.1
 map_size = 1.0
 
 # map parameters from intersection.launch
@@ -47,13 +47,13 @@ obs_list = ['car0']
 #obs_list = ['obs0', 'obs1']
 obs_pose = np.zeros((len(obs_list), 2))
 obs_vel = np.zeros((len(obs_list), 2))
-obs_dim = 4   # radius, think of as a circle, NOTE: should be modified
+obs_dim = 1.9   # radius, think of as a circle, NOTE: should be modified
 
 
 # car parameters
 car_vel = np.array([[0.0, 0.0]])
 car_pose = np.array([[0.0, 0.0]])
-car_dim = 3  # radius, think of as a circle, NOTE: should be modified
+car_dim = 1.9  # radius, think of as a circle, NOTE: should be modified
 
 
 
@@ -120,6 +120,7 @@ def get_dists():
 # t_ahead is the maximum useful predict time
 # NOTE: now it's only 1-D, so this work. It can't cover 2-D situation though.
 # NOTE: car_vel is not considered
+'''
 def get_t_ahead():
     obs_vel, t_res
 
@@ -146,7 +147,7 @@ def get_t_ahead():
     t_ahead = int(np.ceil(t_ahead / t_res))
     
     return t_ahead   # return int
-
+'''
 
 
 def get_map_origin():
@@ -305,16 +306,35 @@ def reset_costmap(t_lh):
     
 
 
+# determine the heading (x or y) of the car
+### NOTE: Now ONLY x and y direction are considered
+### TODO: Should use vector instead
+def dir_xy(car_num = 0):  # now we control only one car
+    global last_dir
+
+    car_vel = update.car_vel
+    
+    if car_vel[car_num][0] > 0.01 and car_vel[car_num][1] < 0.01:   # value of twist.linear.x is greater than that in y
+        last_dir = [1,0]
+        return [1,0]   # [x,y]
+
+    elif car_vel[car_num][1] > 0.01 and car_vel[car_num][0] < 0.01:   # value of twist.linear.y is greater than that in x
+        last_dir = [0,1]
+        return [0,1]   # [x,y]
+
+    else: return last_dir
+
+
 def update_costmap():
     obs_pose, obs_vel, t_res, map_size, map_res, obs_dim, car_dim, front_factor, rear_factor
 
     arr_idx = np.array([])
     # check the costmap around when static
-    t_lh = get_t_ahead()
+    # t_lh = get_t_ahead()
   
     #NOTE: restrict time dimension of costmap in 5 second
-    if t_lh > 50:
-        t_lh = 50
+    #if t_lh > 50:
+    t_lh = int(5/t_res)
 
 
     reset_costmap(t_lh)
@@ -434,7 +454,7 @@ def update_costmap():
 
 #--- Parameters ---#
 
-alpha = 1
+alpha = 1.1
 R_min = 5    # meter
 tau = 0.6    # s
 a_dec = 6    # m/s^2

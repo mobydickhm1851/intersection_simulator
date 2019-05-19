@@ -20,7 +20,7 @@ def set_throttle_steer(data):
     pub_pos_left_steering_hinge = rospy.Publisher('/prius1/front_left_steer_position_controller/command', Float64, queue_size=1)
     pub_pos_right_steering_hinge = rospy.Publisher('/prius1/front_right_steer_position_controller/command', Float64, queue_size=1)
 
-    throttle = data.linear.x/0.1
+    throttle = data.linear.x/0.3
     steer = data.angular.z/2.3
 
     pub_vel_left_rear_wheel.publish(throttle)

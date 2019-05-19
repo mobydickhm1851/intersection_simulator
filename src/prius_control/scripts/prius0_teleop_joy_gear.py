@@ -7,10 +7,10 @@ import time
 
 
 
-maxVel = 1.0
+maxVel = 3.0
 minVel = -maxVel
-accele = 0.005
-brake = accele*1.3
+accele = 0.024
+brake = accele*2.86
 friction = accele/3
 
 car_vel = 0.0
@@ -175,8 +175,8 @@ def main():
     global pub, maxVel, accele
 
     robot_ns = rospy.get_param('/prius0_teleop_joy/robot_ns') 
-    maxVel = rospy.get_param('/{0}_teleop_joy/max_velocity'.format(robot_ns), 5.0) # default is 5.0
-    accele = rospy.get_param('/{0}_teleop_joy/acceleration'.format(robot_ns), 0.035) # default is 0.035
+    maxVel = rospy.get_param('/{0}_teleop_joy/max_velocity'.format(robot_ns), 3.0) # default is 5.0
+    accele = rospy.get_param('/{0}_teleop_joy/acceleration'.format(robot_ns), 0.024) # default is 0.035
 
     rospy.init_node('{0}_teleop_joy'.format(robot_ns), anonymous=True)
     
