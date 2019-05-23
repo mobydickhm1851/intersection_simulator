@@ -34,9 +34,35 @@ position_profile_0 = np.array([[0, -15]])   # timestamp, car0_y
 position_profile_1 = np.array([[0, -15]])   # timestamp, car1_x
 start_time = 0.0   # define as the timestamp when the cars begin to move
 count = 0
+car_dirs=np.array([[0,0],[0,0]])
+
+
+
 
 def rosbag_callback(pose, i):
-    global vel_profile_0, vel_profile_1, count, start_time, position_profile_0, position_profile_1
+    global vel_profile_0, vel_profile_1, count, start_time, position_profile_0, position_profile_1, car_dirs
+
+    car_vel = np.ones([2,2])
+    car_vel[i][0] = abs(pose.twist.twist.linear.x)
+    car_vel[i][1] = abs(pose.twist.twist.linear.y)
+
+    # determine the heading (x or y) of the car
+    ### NOTE: Now ONLY x and y direction are considered
+    ### TODO: Should use vector instead
+    def dir_xy(car_num = 0):  # now we control only one car
+
+        last_dir=[0,0]
+        
+        if car_vel[car_num][0] > car_vel[car_num][1] :   # value of twist.linear.x is greater than that in y
+            last_dir = [1,0]
+            car_dirs[car_num] = [1,0]
+
+        elif car_vel[car_num][1] > car_vel[car_num][0] :   # value of twist.linear.y is greater than that in x
+            last_dir = [0,1]
+            car_dirs[car_num] = [0,1]
+
+        return last_dir   # [0,0] for not moving
+
 
     time_vel=[0.0, 0.0]
     time_position = [0.0, 0.0]
@@ -53,18 +79,28 @@ def rosbag_callback(pose, i):
 
         if i == 0:  # car0
             time_vel[0] = current_time - start_time
-            time_vel[1] = pose.twist.twist.linear.y
             time_position[0] = current_time - start_time
-            time_position[1] = pose.pose.pose.position.y
+            dir_check = dir_xy(0)
+            if dir_check[0]:   # moving in x direction
+                time_vel[1] = pose.twist.twist.linear.x
+                time_position[1] = pose.pose.pose.position.x
+            else:   # moving in y direction
+                time_vel[1] = pose.twist.twist.linear.y
+                time_position[1] = pose.pose.pose.position.y
             vel_profile_0 = np.append(vel_profile_0, [time_vel], 0)
             position_profile_0 = np.append(position_profile_0, [time_position], 0)
 
         elif i == 1: # car1
             time_vel[0] = current_time - start_time
-            time_vel[1] = pose.twist.twist.linear.x
-            vel_profile_1 = np.append(vel_profile_1, [time_vel], 0)
             time_position[0] = current_time - start_time
-            time_position[1] = pose.pose.pose.position.x
+            dir_check = dir_xy(1)
+            if dir_check[0]:   # moving in x direction
+                time_vel[1] = pose.twist.twist.linear.x
+                time_position[1] = pose.pose.pose.position.x
+            else:   # moving in y direction
+                time_vel[1] = pose.twist.twist.linear.y
+                time_position[1] = pose.pose.pose.position.y
+            vel_profile_1 = np.append(vel_profile_1, [time_vel], 0)
             position_profile_1 = np.append(position_profile_1, [time_position], 0)
         # end when either one reaches the node ([0,0])
         # it's cheating now, car0 has to move along y-axis and car1 along x-axis
@@ -77,7 +113,7 @@ def rosbag_callback(pose, i):
 
 #--- Parameters ---#
 
-alpha = 1.1
+alpha = 0.3
 R_min = 5    # meter
 tau = 0.6    # s
 a_dec = 6    # m/s^2
@@ -109,7 +145,7 @@ def CDF(ttc,v_car):
 ###----------------------------------- ###
 
 
-def POS(TTC, TTC_p, time, time_p, v_car):
+def POS(min_TTC, TTC, TTC_p, time, time_p, v_car):
     
 
     #--- Variables ---#
@@ -127,7 +163,7 @@ def POS(TTC, TTC_p, time, time_p, v_car):
 
     
     #--- Probability of Stopping ---#
-    cdf_0 = CDF(TTC, v_car)
+    cdf_0 = CDF(min_TTC, v_car)
     judge_p_stop = (1 - cdf_0) * gamma
 
     if judge_p_stop > 1 :
@@ -169,12 +205,12 @@ def animate_plot(i):
     
     if len(car0_t2n) > 2:
         for i in range(len(car0_t2n)-1):
-            car0_POS.append(POS(car0_t2n[i+1], car0_t2n[i], car0_t[i+1], car0_t[i], car0_vel[i+1]))
+            car0_POS.append(POS(min(car0_t2n), car0_t2n[i+1], car0_t2n[i], car0_t[i+1], car0_t[i], car0_vel[i+1]))
             car0_t_POS.append(car0_t[i+1])
 
     if len(car1_t2n) > 2:
         for i in range(len(car1_t2n)-1):
-            car1_POS.append(POS(car1_t2n[i+1], car1_t2n[i], car1_t[i+1], car1_t[i], car1_vel[i+1]))
+            car1_POS.append(POS(min(car1_t2n), car1_t2n[i+1], car1_t2n[i], car1_t[i+1], car1_t[i], car1_vel[i+1]))
             car1_t_POS.append(car1_t[i+1])
     ##!!! append time (x value) in this loop, or x and y won't match
 
@@ -182,12 +218,17 @@ def animate_plot(i):
     ax2.clear()
 
 
-    line1, = ax1.plot(car0_t, car0_pose, light_blue, label='car0_y_position')
-    line2, = ax1.plot(car1_t, car1_pose, light_orange, label='car1_x_position')
+    if car_dirs[0][0]:   # [1,0] if car0 moving in x-dir
+        line1, = ax1.plot(car0_t, car0_pose, light_blue, label='car0_x_position')
+        line2, = ax1.plot(car1_t, car1_pose, light_orange, label='car1_y_position')
+    else:   # [0,1] or [0,0] if car0 moving in y-dir or not moving
+        line1, = ax1.plot(car0_t, car0_pose, light_blue, label='car0_y_position')
+        line2, = ax1.plot(car1_t, car1_pose, light_orange, label='car1_x_position')
+    
+    
     line3, = ax2.plot(car0_t_POS, car0_POS, green_blue, label='car0_POS')
     line4, = ax2.plot(car1_t_POS, car1_POS, light_yellow, label='car1_POS')
-    
-    
+
     ax1.set_ylabel('position (m)')
     ax1.set_xlabel('time (s)')
     ax2.set_ylabel('probability of stopping')

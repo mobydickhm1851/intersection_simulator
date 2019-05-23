@@ -24,8 +24,8 @@
   <!-- joy stick teleop (1 or 2 cars) -->
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
     <arg name="single" value="$(arg single)" />
-    <arg name="joy_maxVel" value="3" />
-    <arg name="joy_accele" value="0.024"/>
+    <arg name="joy_maxVel" value="5" />
+    <arg name="joy_accele" value="0.035"/>
   </include>
   
   <!-- keyboard teleop (only 1 car) -->

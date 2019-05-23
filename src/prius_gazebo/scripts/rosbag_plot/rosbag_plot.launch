@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+    
+
+    <node name="rosbag_plot_POS_position" type="rosbag_plot_POS_position.py" pkg="prius_gazebo" />
+    <node name="rosbag_plot_POS_velocity" type="rosbag_plot_POS_velocity.py" pkg="prius_gazebo" output="screen" />
+
+</launch>

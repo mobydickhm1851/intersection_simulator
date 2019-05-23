@@ -454,7 +454,7 @@ def update_costmap():
 
 #--- Parameters ---#
 
-alpha = 1.1
+alpha = 1
 R_min = 5    # meter
 tau = 0.6    # s
 a_dec = 6    # m/s^2
@@ -490,9 +490,11 @@ def CDF(ttc):
 
 time_p = 0
 TTC_p = 0
+TTC_list = [999]   # add a large value to initiate
+cdf1 = 0
 
 def POS():
-    global time_p, TTC_p
+    global time_p, TTC_p, TTC_list, cdf1
     
 
     #--- Variables ---#
@@ -501,6 +503,7 @@ def POS():
     v_obs =np.sqrt( np.sum( np.power(obs_vel[0], 2)))
     
     TTC = d_node / v_obs
+    if TTC > 0 : TTC_list.append(TTC)
 
     TTC_dif = (TTC - TTC_p) / (time.time() - time_p)
 
@@ -518,10 +521,11 @@ def POS():
 
     
     #--- Probability of Stopping ---#
-    cdf_0 = CDF(TTC)
+    cdf_0 = CDF(min(TTC_list))
+    cdf1 = min(TTC_list)
     judge_p_stop = (1 - cdf_0) * gamma
 
-    if judge_p_stop > 1 :
+    if judge_p_stop > 1 or v_obs < 0.01 :
 
         p_stop = 1
 
