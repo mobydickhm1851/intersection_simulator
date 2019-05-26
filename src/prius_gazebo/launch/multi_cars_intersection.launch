@@ -24,7 +24,7 @@
   <group ns="prius0">  
     <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 30 -y -1 -z 0 -Y 3.14" />
+      <arg name="init_pose" value="-x 30 -y 1 -z 0 -Y 3.14" />
       <arg name="robot_name" value="prius0" />
     </include>
   </group>
@@ -34,7 +34,7 @@
   <group ns="prius1">  
     <param name="tf_prefix" value="prius1" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x -1 -y -30 -z 0 -Y 1.57" />
+      <arg name="init_pose" value="-x 1 -y -30 -z 0 -Y 1.57" />
       <arg name="robot_name" value="prius1" />
     </include>
   </group>

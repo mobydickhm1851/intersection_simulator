@@ -349,10 +349,10 @@ def main():
 
             else:    # moving in y-direction
                 
-                print("car_abs_vel {0}; lh_dist {1}".format(car_abs_vel, lh_dist))
-                print("car_vel_twist {0}".format(car_vel_twist[0]))
-                print("car_twist/car {0}".format((car_vel_twist[0][1]/car_abs_vel)))
-                print("car_pose[0] {0}".format(car_pose[0]))
+                #print("car_abs_vel {0}; lh_dist {1}".format(car_abs_vel, lh_dist))
+                #print("car_vel_twist {0}".format(car_vel_twist[0]))
+                #print("car_twist/car {0}".format((car_vel_twist[0][1]/car_abs_vel)))
+                #print("car_pose[0] {0}".format(car_pose[0]))
                 if car_abs_vel > 0.01:   # car_vel is not 0
                     lh_pose = car_pose[0] + np.array([0, lh_dist])*(car_vel_twist[0][1]/car_abs_vel) 
                 else:   # car_vel is 0
@@ -388,11 +388,9 @@ def main():
             lh_time = car_abs_vel/brake*(t_res)
             #lh_time = 0
 
-            print("lh_pose_range = {0}".format(lh_pose_range))
 
             for lh_p in lh_pose_range:
                 cand_prob = get_col_prob(0, np.array([lh_p]))   #2 secs:sec/t_res
-                print("cand_prob now = {0}".format(cand_prob))
                 if cand_prob > 0.0:
                     prob = cand_prob
                     unit_lh_pose = lh_p
@@ -403,7 +401,6 @@ def main():
             # also look into the future
             for lh_p in lh_pose_range:
                 cand_prob = get_col_prob(lh_time, np.array([lh_p]))   #2 secs:sec/t_res
-                print("cand_prob in {1} = {0}".format(cand_prob, lh_time))
                 if cand_prob > 0.0:
                     prob_future = cand_prob
                     break
@@ -412,9 +409,9 @@ def main():
 
 
 
-            print("ego car pose {0} and vel {1}".format(car_pose[0], car_abs_vel))
-            print("[{0}] Obs at {1} with prob {2}.".format(time.time(), unit_lh_pose, prob))
-            print("Final cmd speed {0}; lh_dist {1}; lh_time {2}".format(car_vel[0], lh_dist, lh_time))
+            #print("ego car pose {0} and vel {1}".format(car_pose[0], car_abs_vel))
+            #print("[{0}] Obs at {1} with prob {2}.".format(time.time(), unit_lh_pose, prob))
+            #print("Final cmd speed {0}; lh_dist {1}; lh_time {2}".format(car_vel[0], lh_dist, lh_time))
 
 
             # CRITICAL situation, Need brake to avoide collision
@@ -455,7 +452,7 @@ def main():
                     print("Slow down near the crossroad!")
 
 
-                if dir_test == 1:    # dir_test == TRUE if obs is coming
+                if dir_test == 1 and car_d_node < 16:    # dir_test == TRUE if obs is coming
                     
 
                     # CHECK the d-TTC here to see if collision is about to happen
@@ -472,11 +469,11 @@ def main():
     
                         else : 
                             # BRAKE a little bit to see what will happend
-                            decelerate(2)
+                            decelerate()
                             print("Brake due to POS is {0}".format(pos))
 
                     else:    # 
-                        cruise()
+                        cruise(5)
                         print("Obstacle is coming!!!!")
 
 
@@ -494,7 +491,7 @@ def main():
 
                 elif dir_test == 2 :    # car is not moving
 
-                    cruise()
+                    cruise(5)
                     print("Obstacle is not MOVING")
 
 

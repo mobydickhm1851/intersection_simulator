@@ -24,7 +24,7 @@
   <group ns="prius0">  
     <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x -25  -y 1 -z 0 -Y 0" />
+      <arg name="init_pose" value="-x -1  -y 30 -z 0 -Y -1.57" />
       <arg name="robot_name" value="prius0" />
     </include>
   </group>
@@ -34,7 +34,7 @@
   <group ns="prius1">  
     <param name="tf_prefix" value="prius1" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x 1 -y 30 -z 0 -Y -1.57" />
+      <arg name="init_pose" value="-x -30 -y -1 -z 0 -Y 0" />
       <arg name="robot_name" value="prius1" />
     </include>
   </group>
@@ -48,7 +48,7 @@
       
   <node name="prius1_nav" type="prius1_POS_nav.py" pkg="prius_control" output="screen" >
     <param name="robot_ns" value="prius1" />
-    <param name="init_vel" type="double" value="4.0" />
+    <param name="init_vel" type="double" value="5.0" />
     <param name="cmap_size" type="double" value="$(arg cmap_size_default)" />
     <param name="cmap_res" type="double" value="$(arg cmap_res_default)" />
   </node>
