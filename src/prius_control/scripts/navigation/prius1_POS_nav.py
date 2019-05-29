@@ -469,7 +469,7 @@ def main():
     
                         else : 
                             # BRAKE a little bit to see what will happend
-                            decelerate()
+                            decelerate(2)
                             print("Brake due to POS is {0}".format(pos))
 
                     else:    # 

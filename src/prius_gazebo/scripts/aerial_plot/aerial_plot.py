@@ -38,7 +38,7 @@ car1_x_vel_arr = np.array([])
 car1_y_vel_arr = np.array([])
 
 # GET car0 data
-with open("/home/liuyc/Desktop/171_car0_trimed", "r") as car0_original_file:
+with open(r"/home/liuyc/Desktop/different_params/173_car0_trimed", "r") as car0_original_file:
     #global time_arr, car0_x_pose_arr, car0_y_pose_arr
 
     #This should turn file contents into a list, by line, without \n
@@ -59,7 +59,7 @@ with open("/home/liuyc/Desktop/171_car0_trimed", "r") as car0_original_file:
 
 
 # GET car1 data
-with open("/home/liuyc/Desktop/171_car1_trimed", "r") as car1_original_file:
+with open(r"/home/liuyc/Desktop/different_params/173_car1_trimed", "r") as car1_original_file:
 
     #This should turn file contents into a list, by line, without \n
     car1_original_list  = car1_original_file.read().splitlines() 
@@ -80,9 +80,9 @@ with open("/home/liuyc/Desktop/171_car1_trimed", "r") as car1_original_file:
 #--- Parameters ---#
 
 alpha = .3
-R_min = 5    # meter
+R_min = 3    # meter
 tau = 0.6    # s
-a_dec = 6    # m/s^2
+a_dec = 3.4    # m/s^2
 slope = 0.65   # y = 0.65x + 0.15
     
 
@@ -130,6 +130,7 @@ def POS(min_TTC, TTC, TTC_p, time, time_p, v_car):
     
     #--- Probability of Stopping ---#
     cdf_0 = CDF(min_TTC, v_car)
+
     judge_p_stop = (1 - cdf_0) * gamma
 
     if judge_p_stop > 1 :
@@ -138,6 +139,7 @@ def POS(min_TTC, TTC, TTC_p, time, time_p, v_car):
 
     else:
         p_stop = judge_p_stop
+    
 
 
     return p_stop
@@ -229,12 +231,12 @@ def plot_figs_together():
 
     if len(car0_t2n) > 2:
         for i in range(len(car0_t2n)-1):
-            car0_POS.append(POS(min(car0_t2n), car0_t2n[i+1], car0_t2n[i], car0_t[i+1], car0_t[i], car0_vel[i+1]))
+            car0_POS.append(POS(min(car0_t2n[:i+1]), car0_t2n[i+1], car0_t2n[i], car0_t[i+1], car0_t[i], car0_vel[i+1]))
             car0_t_POS.append(car0_t[i+1])
 
     if len(car1_t2n) > 2:
         for i in range(len(car1_t2n)-1):
-            car1_POS.append(POS(min(car1_t2n), car1_t2n[i+1], car1_t2n[i], car1_t[i+1], car1_t[i], car1_vel[i+1]))
+            car1_POS.append(POS(min(car1_t2n[:i+1]), car1_t2n[i+1], car1_t2n[i], car1_t[i+1], car1_t[i], car1_vel[i+1]))
             car1_t_POS.append(car1_t[i+1])
     ##!!! append time (x value) in this loop, or x and y won't match
 
@@ -280,9 +282,9 @@ def plot_figs_together():
     ax22.set_ylabel('probability of stopping')
     # to keep 0 of two axis aligned
     ax11.set_ylim(-6,6)
-    ax12.set_ylim(-0.2,1.2)
+    ax12.set_ylim(-0.2, max(car1_POS+car0_POS))
     ax21.set_ylim(-30,30)
-    ax22.set_ylim(-0.2,1.2)
+    ax22.set_ylim(-0.2, max(car1_POS+car0_POS))
     
     handles1=[line11, line12, line13, line14]
     labels1 = [h.get_label() for h in handles1]

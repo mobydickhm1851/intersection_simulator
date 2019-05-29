@@ -66,8 +66,8 @@
 
 
   <!-- =============  rosbag  ============== -->
-  <arg name="path" default="$(find prius_gazebo)/rosbag/20190524/" />
-  <arg name="session" default="free.bag" />
+  <arg name="path" default="$(find prius_gazebo)/rosbag/20190527/" />
+  <arg name="session" default="chanky_prius1_1.bag" />
   <arg name="topic1" default="/prius0/base_pose_ground_truth"/>
   <arg name="topic2" default="/prius1/base_pose_ground_truth"/>
   <arg name="topic3" default="/prius0/cmd_vel"/>
