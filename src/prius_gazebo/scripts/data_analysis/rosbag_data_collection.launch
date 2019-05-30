@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="dir_name" value="20190523/" />
+    <arg name="rosbag_name" value="paul_lukc_10" />
+
+    <node name="rosbag_data_writer" type="rosbag_data_collection.py" pkg="prius_gazebo" output="screen" >
+        <param name="dir_name" type="string" value="$(arg dir_name)" />
+        <param name="file_name" type="string" value="$(arg rosbag_name)" />
+    </node>
+
+    <arg name="path" default="$(find prius_gazebo)/rosbag/" /> 
+    <arg name="dir" default="$(arg dir_name)" /> 
+    <node pkg="rosbag" type="play" name="player" args="$(arg path)$(arg dir_name)$(arg rosbag_name).bag" />
+
+</launch>

@@ -10,62 +10,7 @@ import numpy as np
 from scipy.stats import norm
 
 
-#--- Parameters ---#
 
-alpha = 0.3
-R_min = 3    # meter
-tau = 0.6    # s
-a_dec = 3.4    # m/s^2
-slope = 0.65   # y = 0.65x + 0.15
-
-###-------------------------------###
-###---Time to Action Estimation---###
-###-------------------------------###
-
-def CDF(ttc,v_car):
-
-    #--- Get the estimated TTA ---#
-    
-    R_i = v_car**2 / (2 * a_dec)
-
-    TTA_est = (R_i + v_car*tau + R_min ) / v_car
-
-    TTA_act = TTA_est / slope   # mean of the PDF
-
-    std = TTA_act * 0.375/2    # standard deviation of the PDF
-
-    cdf = norm(TTA_act, std).cdf(ttc)
-    #print("TTA_act = {0} while std = {1}".format(TTA_act, std))
-    
-    return cdf
-    
-
-###----------------------------------- ###
-###------Probability of Stopping------ ###
-###----------------------------------- ###
-
-def POS(min_TTC, TTC, TTC_p, time, time_p, v_car):
-    
-    #--- Variables ---#
-    TTC_dif = (TTC - TTC_p) / (time - time_p)
-
-    #--- gamma ---#
-    if (TTC_dif + 1) < 0:
-        gamma = 0
-
-    else:
-        gamma = (TTC_dif + 1) * alpha
-
-    #--- Probability of Stopping ---#
-    cdf_0 = CDF(min_TTC, v_car)
-    judge_p_stop = (1 - cdf_0) * gamma
-
-    if judge_p_stop > 1 :
-        p_stop = 1
-    else:
-        p_stop = judge_p_stop
-
-    return p_stop
 
 
 
@@ -108,10 +53,9 @@ def animate_plot(i):
 
 ########### END OF PROCESSING DATA #############
 
-
 #######################################################
 #######################################################
-with open(r"/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/CAR_results_123", "a") as f:
+with open(r"/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/{0}".format(a), "a") as f:
 
     
     def write_results():
