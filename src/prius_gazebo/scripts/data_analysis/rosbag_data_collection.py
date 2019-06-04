@@ -89,7 +89,7 @@ class CarStates:
             GAMMA = (TTC_dif + 1) * ALPHA
 
         #--- Probability of Stopping ---#
-        cdf_0 = CDF(min_TTC, v_car)
+        cdf_0 = self.CDF(min_TTC, v_car)
         judge_p_stop = (1 - cdf_0) * GAMMA
         if judge_p_stop > 1 :
             p_stop = 1
