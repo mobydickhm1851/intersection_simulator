@@ -283,7 +283,7 @@ class TxtData:
 if __name__ == '__main__':
 
 
-    path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190523/*prius*'
+    path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606/*prius*'
     files = glob.glob(path)
 
 # File seperated by names
@@ -304,7 +304,7 @@ if __name__ == '__main__':
             if check == 1 : file_list.append(file_name)
 
 
-    real_path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190523/'
+    real_path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606/'
 
 # CAR classification
 
@@ -312,7 +312,10 @@ if __name__ == '__main__':
 
     for driver_names in file_list:
     # Default as 20 files (e.g. liuyc_lukc_1_prius*)
-        for i in range(10):   
+        for i in range(21):   
+
+            print("Processing {0}_{1}.....".format(driver_names, i+1))
+
         # prius0    
             prius0 = TxtData()
             prius0_temp_d2n = 0
@@ -361,7 +364,9 @@ if __name__ == '__main__':
             final_CAR_list.append(prius0.ods_sub_data[0])
             final_CAR_list.append(prius1.ods_sub_data[0])
 
+            print("{0}_{1} CAR analysis done.\n".format(driver_names, i+1))
+
     data = OrderedDict()
-    data.update({"20190523":final_CAR_list})
+    data.update({"20190524":final_CAR_list})
     save_data("CAR_results.ods", data)
     

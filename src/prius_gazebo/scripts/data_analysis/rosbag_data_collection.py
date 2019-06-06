@@ -50,54 +50,6 @@ class CarStates:
         return last_dir   # [0,0] for not moving
 
 
-    #--- Parameters ---#
-    ALPHA = 0.3
-    R_MIN = 3    # meter
-    TAU = 0.6    # s
-    A_DEC = 3.4    # m/s^2
-    SLOPE = 0.65   # y = 0.65x + 0.15
-    #--- ========== ---#
-
-
-    ###-------------------------------###
-    ###---Time to Action Estimation---###
-    ###-------------------------------###
-    def CDF(self, TTC, v_car):
-
-        #--- Get the estimated TTA ---#
-        R_I = v_car**2 / (2 * A_DEC)
-        TTA_est = (R_I + v_car*TAU + R_MIN ) / v_car
-        TTA_act = TTA_est / SLOPE   # mean of the PDF
-        std = TTA_act * 0.375/2    # standard deviation of the PDF
-        cdf = norm(TTA_act, std).cdf(TTC)
-        
-        return cdf
-    
-
-    ###----------------------------------- ###
-    ###------Probability of Stopping------ ###
-    ###----------------------------------- ###
-    def POS(self, min_TTC, TTC, TTC_p, time, time_p, v_car):
-        
-        #--- Variables ---#
-        TTC_dif = (TTC - TTC_p) / (time - time_p)
-
-        #--- GAMMA ---#
-        if (TTC_dif + 1) < 0:
-            GAMMA = 0
-        else:
-            GAMMA = (TTC_dif + 1) * ALPHA
-
-        #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(min_TTC, v_car)
-        judge_p_stop = (1 - cdf_0) * GAMMA
-        if judge_p_stop > 1 :
-            p_stop = 1
-        else:
-            p_stop = judge_p_stop
-
-        return p_stop
-
 
     def rosbag_callback(self, pose):
 
@@ -141,7 +93,7 @@ class CarStates:
 
     def export_profile(self):
         print("{0}'s export_profile called".format(self.name)) 
-        with open(r"/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190523/{0}_{1}".format(self.file_name, self.name), "a") as f:
+        with open(r"/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{2}/{0}_{1}".format(self.file_name, self.name, self.dir_name), "a") as f:
             # INCASE cought in loops
             if not self.exported :
 

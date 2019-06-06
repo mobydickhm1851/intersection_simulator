@@ -62,12 +62,12 @@
   <!-- rviz 
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/prius0_intersection_experiment.rviz" if="$(arg use_rviz)" />
 -->
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/prius0_rosbag.rviz" if="$(arg use_rviz)" />
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find prius_gazebo)/rviz/prius0_intersection_experiment.rviz" if="$(arg use_rviz)" />
 
 
   <!-- =============  rosbag  ============== -->
-  <arg name="path" default="$(find prius_gazebo)/rosbag/20190527/" />
-  <arg name="session" default="chanky_prius1_1.bag" />
+  <arg name="path" default="$(find prius_gazebo)/rosbag/20190606/" />
+  <arg name="session" default="liuyc_prius1_21.bag" />
   <arg name="topic1" default="/prius0/base_pose_ground_truth"/>
   <arg name="topic2" default="/prius1/base_pose_ground_truth"/>
   <arg name="topic3" default="/prius0/cmd_vel"/>

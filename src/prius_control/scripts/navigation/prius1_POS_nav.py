@@ -385,7 +385,7 @@ def main():
             prob = 0.0
             prob_future = 0.0
             unit_lh_pose = car_pose[0]
-            lh_time = car_abs_vel/brake*(t_res)
+            lh_time = car_abs_vel/(brake/t_res)
             #lh_time = 0
 
 
@@ -416,7 +416,7 @@ def main():
 
             # CRITICAL situation, Need brake to avoide collision
             if prob or prob_future >= emerg_prob:
-                decelerate()
+                decelerate(2)
                 print("Braking Just in Case")
 
             else:
@@ -464,7 +464,7 @@ def main():
                         pos_conf_idx = 0.8
                         
                         if pos > pos_conf_idx:
-                            cruise(5)
+                            cruise(3)
                             print("POS = {1} is higher than {0}".format(pos_conf_idx, pos))
     
                         else : 
@@ -473,7 +473,7 @@ def main():
                             print("Brake due to POS is {0}".format(pos))
 
                     else:    # 
-                        cruise(5)
+                        cruise(3)
                         print("Obstacle is coming!!!!")
 
 
