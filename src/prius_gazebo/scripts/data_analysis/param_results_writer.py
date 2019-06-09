@@ -266,10 +266,10 @@ class TxtData:
             temp_acc = (self.car_vel_list[i+1] - self.car_vel_list[i]) / time_res
             car_acc_list.append(float(temp_acc))
     # average_acc part
-            if ave_begin_end[0] == 0 and temp_acc < 0.001 : 
+            if ave_begin_end[0] == 0 and temp_acc < -0.01 : 
                 ave_begin_end[0] = i
                 print("BEGIN = {0}".format(i))
-            elif ave_begin_end[0] != 0 and ave_begin_end[1] ==0 and abs(temp_acc) <0.0002 : 
+            elif ave_begin_end[0] != 0 and ave_begin_end[1] ==0 and temp_acc > -0.01 : 
                 ave_begin_end[1] = i
                 print("END = {0}".format(i))
 
@@ -278,6 +278,7 @@ class TxtData:
         # Incase the test end before car fully stopped
         if ave_begin_end[1] == 0:
             ave_begin_end[1] = len(car_acc_list) - 1 
+            print("END = {0}".format(ave_begin_end[1]))
 
         acc_sum = sum(car_acc_list[ave_begin_end[0]:ave_begin_end[1]])
         acc_len = len(car_acc_list[ave_begin_end[0]:ave_begin_end[1]])
@@ -286,18 +287,20 @@ class TxtData:
             average_acc = acc_sum/acc_len
 
     # R_min part
-        R_MIN = self.car_pose_list[-1]
+        R_MIN = abs(self.car_pose_list[-1])
 
     # TTA and TTA_est part
         # CAUTION:len(car_t2n_list) is shorter than len(car_vel_list) by 1        
         TTA = self.car_t2n_list[ave_begin_end[0]]
         v_TTA = self.car_vel_list[ave_begin_end[0]]
         # TTA_est
-        R_I = v_TTA**2 / (2 * average_acc)
+        R_I = v_TTA**2 / (2 * abs(average_acc))
         TTA_est = (R_I + v_TTA*self.TAU + R_MIN ) / v_TTA
         TTA_act = TTA_est / self.SLOPE   # mean of the PDF
+        slope = TTA / TTA_est
+        print("R_I is {0}. v_TTA is {1} YOYOYOYO ".format(R_I, v_TTA))
         
-        return {"A_DEC":average_acc, "R_MIN":R_MIN, "TTA":TTA, "TTA_est":TTA_est, "TTA_act":TTA_act}
+        return {"A_DEC":average_acc, "R_MIN":R_MIN, "TTA":TTA, "TTA_est":TTA_est, "TTA_act":TTA_act, "slope":slope}
 
 
 if __name__ == '__main__':
@@ -355,7 +358,7 @@ if __name__ == '__main__':
 
             final_param_list.append(prius0.ods_sub_data[0])
 
-            print("Got {0}_{1}'s param. average A_DEC = {2}. R_MIN = {3}. TTA = {4}. TTA_est = {5}. TTA_act = {6}. \n".format(driver_names, i+1, params["A_DEC"], params["R_MIN"], params["TTA"], params["TTA_est"], params["TTA_act"]))
+            print("Got {0}_{1}'s param. average A_DEC = {2}. R_MIN = {3}. TTA = {4}. TTA_est = {5}. TTA_act = {6}. TTA/TTA_est = {7}\n".format(driver_names, i+1, params["A_DEC"], params["R_MIN"], params["TTA"], params["TTA_est"], params["TTA_act"], params["slope"]))
 
     
     #data = OrderedDict()
