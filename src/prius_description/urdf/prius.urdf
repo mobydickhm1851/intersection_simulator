@@ -352,7 +352,7 @@
   <joint name="front_camera_joint" type="fixed">
     <parent link="chassis"/>
     <child link="front_camera_link"/>
-    <origin xyz="0.17 -0.2 1.3" rpy="0 0.05 -1.5707"/>
+    <origin xyz="0.17 -0.2 1.4" rpy="0 0.05 -1.5707"/>
   </joint>
 
   <link name="back_camera_link">
@@ -376,7 +376,7 @@
   <joint name="left_camera_joint" type="fixed">
     <parent link="chassis"/>
     <child link="left_camera_link"/>
-    <origin xyz="0.22 -0.2 1.15" rpy="0 0.05 -0.14"/>
+    <origin xyz="0.17 -0.2 1.4" rpy="0 0.05 -0.0707"/>
   </joint>
 
   <link name="right_camera_link">
@@ -388,7 +388,7 @@
   <joint name="right_camera_joint" type="fixed">
     <parent link="chassis"/>
     <child link="right_camera_link"/>
-    <origin xyz="0.1 -0.2 1.15" rpy="0 0.05 -3.0"/>
+    <origin xyz="0.17 -0.2 1.4" rpy="0 0.05 -3.0707"/>
   </joint>
 
   <link name="back_left_far_sonar_link">
@@ -721,7 +721,7 @@
     <sensor type="camera" name="left_camera_sensor">
       <update_rate>30.0</update_rate>
       <camera name="left_camera">
-        <horizontal_fov>1.6862634</horizontal_fov>
+        <horizontal_fov>1.5</horizontal_fov>
         <image>
           <width>640</width>
           <height>360</height>
@@ -758,7 +758,7 @@
     <sensor type="camera" name="right_camera_sensor">
       <update_rate>30.0</update_rate>
       <camera name="right_camera">
-        <horizontal_fov>0.91</horizontal_fov>
+        <horizontal_fov>1.5</horizontal_fov>
         <image>
           <width>640</width>
           <height>360</height>

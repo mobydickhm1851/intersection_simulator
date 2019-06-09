@@ -10,18 +10,13 @@ import numpy as np
 from scipy.stats import norm
 from collections import OrderedDict
 from pyexcel_ods import save_data
+from pyexcel_ods import get_data
 
 sub_data = []
-data = OrderedDict()
+data = get_data("your_file.ods")
 
-sub_data = [range(20), [4,5,6], [7,8,9]]
-sub_data_arr = np.array(sub_data)
-print(sub_data_arr.shape)
-
-print(sub_data_arr)
-
-
-data.append({"hahahahha":sub_data_arr})
+sub_data = [range(20), [4,5,6], [7,8,9.09999999], [1.23456],[]]
+data["hahahahah111"] = sub_data
 save_data("your_file.ods", data)
 
 print(data)

@@ -165,7 +165,7 @@ def get_impact_time(cor_list):
 ### Some default settings
 # HERE we control the pub_rate as 10 while in joy_teleop it's 100
 # SO the acceleration here is 10 times
-accele = 0.5*t_res  #(0.075 m/s^2)
+accele = 0.5*t_res  #(0.05 m/s^2)
 brake = accele*2.86
 max_vel = 5.0
 min_vel = 0.0 #(no reverse)
@@ -435,7 +435,7 @@ def main():
                     dir_test = 2
 
                 # TTC_thresh as how careful
-                TTC_thresh = 2
+                TTC_thresh = 3
                 obs_pose = update.obs_pose
                 obs_vel = update.obs_vel
                 obs_d_node =np.sqrt( np.sum( np.power( np.subtract( obs_pose[0],[0,0]), 2)))
@@ -452,7 +452,7 @@ def main():
                     print("Slow down near the crossroad!")
 
 
-                if dir_test == 1 and car_d_node < 16:    # dir_test == TRUE if obs is coming
+                if dir_test == 1 and car_d_node < 12:    # dir_test == TRUE if obs is coming
                     
 
                     # CHECK the d-TTC here to see if collision is about to happen
@@ -464,7 +464,7 @@ def main():
                         pos_conf_idx = 0.8
                         
                         if pos > pos_conf_idx:
-                            cruise(3)
+                            cruise(4)
                             print("POS = {1} is higher than {0}".format(pos_conf_idx, pos))
     
                         else : 
@@ -473,8 +473,8 @@ def main():
                             print("Brake due to POS is {0}".format(pos))
 
                     else:    # 
-                        cruise(3)
-                        print("Obstacle is coming!!!!")
+                        cruise(4)
+                        print("Accelerating since no collision detected.")
 
 
 
@@ -485,7 +485,7 @@ def main():
                         print("Brake to easy humans! prob = {0}".format(prob))
                     
                     else:    
-                        cruise()
+                        cruise(5)
                         print("Obstacle is leaving!")
 
 

@@ -38,7 +38,7 @@ car1_x_vel_arr = np.array([])
 car1_y_vel_arr = np.array([])
 
 # GET car0 data
-with open(r"/home/liuyc/Desktop/different_params/173_car0_trimed", "r") as car0_original_file:
+with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606_02/liuyc_prius1_13_prius0', "r") as car0_original_file:
     #global time_arr, car0_x_pose_arr, car0_y_pose_arr
 
     #This should turn file contents into a list, by line, without \n
@@ -59,7 +59,7 @@ with open(r"/home/liuyc/Desktop/different_params/173_car0_trimed", "r") as car0_
 
 
 # GET car1 data
-with open(r"/home/liuyc/Desktop/different_params/173_car1_trimed", "r") as car1_original_file:
+with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606_02/liuyc_prius1_13_prius1', "r") as car1_original_file:
 
     #This should turn file contents into a list, by line, without \n
     car1_original_list  = car1_original_file.read().splitlines() 
@@ -79,11 +79,11 @@ with open(r"/home/liuyc/Desktop/different_params/173_car1_trimed", "r") as car1_
 
 #--- Parameters ---#
 
-alpha = .3
+alpha = .2
 R_min = 3    # meter
 tau = 0.6    # s
 a_dec = 3.4    # m/s^2
-slope = 0.65   # y = 0.65x + 0.15
+slope = 0.45   # y = 0.65x + 0.15
     
 
 ###-------------------------------###

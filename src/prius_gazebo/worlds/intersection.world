@@ -1,4 +1,8 @@
+<?xml version="1.0"?>
+
 <sdf version='1.6'>
+
+
   <world name='default'>
     <scene>
       <grid>0</grid>
@@ -25,7 +29,6 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>1 1</size>
             </plane>
           </geometry>
           <surface>
@@ -50,16 +53,30 @@
       </link>
       <static>1</static>
     </model>
-    <road name='x_r_road'>
+    <road name='y_u_road'>
       <width>7.34</width>
-      <point>3.67 0 0</point>
+      <point>40 0 0</point>
+      <point>-40 0 0</point>
+      <point>-50 10 0</point>
+      <point>-50 40 0</point>
+      <point>-40 50 0</point>
+      <point>-10 50 0</point>
+      <point>0 40 0</point>
+      <point>0 -40 0</point>
+      <point>10 -50 0</point>
+      <point>40 -50 0</point>
+      <point>50 -40 0</point>
+      <point>50 -10 0</point>
+      <point>40 0 0</point>
       <point>30 0 0</point>
     </road>
-    <road name='x_l_road'>
+<!--    
+    <road name='x_r_road'>
       <width>7.34</width>
-      <point>-3.67 0 0</point>
       <point>-30 0 0</point>
+      <point>30 0 0</point>
     </road>
+-->
     <road name='Footway'>
       <width>7.34</width>
       <point>0 3.67 0.005</point>
@@ -70,16 +87,6 @@
           <name>Gazebo/Footway</name>
         </script>
       </material>
-    </road>
-    <road name='y_u_road'>
-      <width>7.34</width>
-      <point>0 3.67 0</point>
-      <point>0 30 0</point>
-    </road>
-    <road name='y_d_road'>
-      <width>7.34</width>
-      <point>0 -3.67 0</point>
-      <point>0 -30 0</point>
     </road>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>

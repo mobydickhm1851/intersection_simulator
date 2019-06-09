@@ -454,11 +454,11 @@ def update_costmap():
 
 #--- Parameters ---#
 
-alpha = 1
-R_min = 5    # meter
+alpha = .2
+slope = 0.45   # y = 0.65x + 0.15
+a_dec = 1    # m/s^2
+R_min = 3    # meter
 tau = 0.6    # s
-a_dec = 6    # m/s^2
-slope = 0.65   # y = 0.65x + 0.15
     
 
 ###-------------------------------###

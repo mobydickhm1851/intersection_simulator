@@ -19,19 +19,21 @@ class TxtData:
     def __init__(self):
 
     #--- POS, CDF Parameters ---#
-        self.ALPHA = 0.3
+        self.ALPHA = .2
+        self.SLOPE = 0.45   # y = 0.65x + 0.15
+        self.A_DEC = 1    # m/s^2
         self.R_MIN = 3    # meter
         self.TAU = 0.6    # s
-        self.A_DEC = 3.4    # m/s^2
-        self.SLOPE = 0.65   # y = 0.65x + 0.15
 
     # Analysis Parameters
         self.VISIBLE_DIST = 12    # (m)
-        self.POS_THRESH = 0.8
+        self.POS_YIELD_THRESH = 0.8
+        self.POS_PASS_THRESH = 0.5
 
     # Analysis List
         self.ods_data = OrderedDict()
         self.ods_sub_data = []
+        self.sum_list = []
 
     # Original data
         self.first_timestamp = 0.0
@@ -150,7 +152,7 @@ class TxtData:
             self.y_vel_arr = np.append(self.y_vel_arr, float(row.split(",")[4]), )
 
 
-    def get_final_list(self):
+    def get_final_list(self, every_num=1):
 
     # CHECK which direction car* is moving
         x_displacement = abs(self.x_pose_arr[-1] - self.x_pose_arr[0])
@@ -171,14 +173,8 @@ class TxtData:
             self.car_vel_list = map(abs, list(self.y_vel_arr))
         else : 
             print("This car is not moving ! {0}".format(self.dir_xy))
-        
 
-
-    # every_num=n : average every n data
-    def POS_analysis(self, every_num=1):
 #### PRE-PROCESS #### 
-    # Process the raw data and get final position and speed (x or y)    
-        self.get_final_list()
 
     # Start counting from where the ego car can see the coming car
         for p in range(len(self.car_pose_list)):
@@ -205,46 +201,173 @@ class TxtData:
             for i in range(len(self.car_t2n_list)-1):
                 self.car_POS_list.append(self.POS(min(self.car_t2n_list[:i+1]), self.car_t2n_list[i+1], self.car_t2n_list[i], self.car_t_list[i+1], self.car_t_list[i], self.car_vel_list[i+1]))
                 self.car_POS_t_list.append(self.car_t_list[i+1])
-         
+
+
+
+    # every_num=n : average every n data
+    def CAR_yield_analysis(self, file_name):
+#### COUNTING CAR ####
+    # Turn time into t-minus (copy one, avoide changing on the original list )
+        # copy the list (list.copy() available in 3.3)
+        time_line = self.car_POS_t_list[:]
+        t_minus = time_line[::-1]   # reverse the list
+        t_minus = list(np.array(t_minus) - t_minus[0])
+
+        POS_list = self.car_POS_list[:]
+        POS_list = POS_list[::-1]
+        current_list = [] 
+        current_list.append(file_name)
+        for i in range(len(POS_list)):
+            if POS_list[i] >= self.POS_YIELD_THRESH:
+                current_list.append(1)
+            else:
+                current_list.append(0)
+
+        self.ods_sub_data.append(current_list)  
+
+
+    # every_num=n : average every n data
+    def CAR_pass_analysis(self, file_name):
+#### COUNTING CAR ####
+    # Turn time into t-minus (copy one, avoide changing on the original list )
+        # copy the list (list.copy() available in 3.3)
+        time_line = self.car_POS_t_list[:]
+        t_minus = time_line[::-1]   # reverse the list
+ #       print("t_minus is {0}".format(t_minus))
+        t_minus = list(np.array(t_minus) - t_minus[0])
+
+        POS_list = self.car_POS_list[:]
+        POS_list = POS_list[::-1]
+        current_list = [] 
+        current_list.append(file_name)
+        for i in range(len(POS_list)):
+            if POS_list[i] <= self.POS_PASS_THRESH:
+                current_list.append(1)
+            else:
+                current_list.append(0)
+
+        self.ods_sub_data.append(current_list)  
+
+
+    def analyze_all(self, file_path):
+
+        path = file_path
+        files = glob.glob(path)
+
+        # Analyze every "set" of file
+        for name in files:
+            try:
+                with open(name, "r") as f:
+                    # Turn file contents into a list, by line, without \n
+                    raw_list = f.read().splitlines()
+                    # Update the arrays
+                    self.update_arrays(raw_list)
+                    # Get the final lists (x or y)
+                    self.get_final_list()
+                    file_name = name.split('/')[-1]
+                    self.CAR_analysis(file_name)
+                    # Do something
+                    # Reset arrays
+                    self.reset_arrays()
+
+            except IOError as exc:
+                if exc.errno != errno.EISDIR:
+                    raise
+
+        data = OrderedDict()
+        data.update({"20190606_1":self.ods_sub_data})
+        save_data("CAR_results_yield.ods", data)
 
 
 
 if __name__ == '__main__':
 
-    for i in range(14):
-        file_name = ""
+    dir_name = "20190606_02"
 
-        path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190523/paul_lukc_{0}_prius0'.format(i+1)
-        prius0 = TxtData()
-        prius0_temp_d2n = 0
-        with open(path0, "r") as f:
-            file_name_list = path0.split('/')[-1].split("_")
-            file_name = file_name_list[0]+"_"+file_name_list[1]+"_"+file_name_list[2]
+    path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*prius*'.format(dir_name)
+    files = glob.glob(path)
+
+# File seperated by names
+    file_list = []
+    for name in files:
+        file_name_list = name.split('/')[-1].split("_")
+        file_name = file_name_list[0]+"_"+file_name_list[1]
+        if len(file_list) == 0:
+            file_list.append(file_name)
+        else:
+            check = 0   # 1 need to add
+            for j in file_list:
+                if j == file_name:
+                    check = 0
+                    break
+                else:
+                    check = 1
+            if check == 1 : file_list.append(file_name)
+
+
+    real_path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/'.format(dir_name)
+
+# CAR classification
+
+    final_CAR_list = []
+
+    for driver_names in file_list:
+    # Default as 20 files (e.g. liuyc_lukc_1_prius*)
+        for i in range(20):   
+
+            print("Processing {0}_{1}.....".format(driver_names, i+1))
+
+        # prius0    
+            prius0 = TxtData()
+            prius0_temp_d2n = 0
+            path0 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius0"
+            with open(path0, "r") as f:
             # Turn file contents into a list, by line, without \n
-            raw_list = f.read().splitlines()
+                raw_list = f.read().splitlines()
             # Update the arrays
-            prius0.update_arrays(raw_list)
+                prius0.update_arrays(raw_list)
             # Get the final lists (x or y)
-            prius0.POS_analysis()
-            # Do something
-            prius0_temp_d2n = abs(prius0.car_pose_list[-1])
+                prius0.get_final_list()
+            # Get the last distance
+                prius0_temp_d2n = abs(prius0.car_pose_list[-1])
+            # Reset (not needed in a for loop)
+            #    prius0.reset_arrays()
 
-        path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190523/paul_lukc_{0}_prius1'.format(i+1)
-        prius1 = TxtData()
-        prius1_temp_d2n = 0
-        with open(path1, "r") as f:
+
+        # prius1    
+            prius1 = TxtData()
+            prius1_temp_d2n = 0
+            path1 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius1"
+            with open(path1, "r") as f:
             # Turn file contents into a list, by line, without \n
-            raw_list = f.read().splitlines()
+                raw_list = f.read().splitlines()
             # Update the arrays
-            prius1.update_arrays(raw_list)
+                prius1.update_arrays(raw_list)
             # Get the final lists (x or y)
-            prius1.POS_analysis()
-            # Do something
-            prius1_temp_d2n = abs(prius1.car_pose_list[-1])
+                prius1.get_final_list()
+            # Get the last distance
+                prius1_temp_d2n = abs(prius1.car_pose_list[-1])
+            # Reset (not needed in a for loop)
+            #    prius1.reset_arrays()
 
-        if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
-            print("[{0}]    prius0 {1}:{2:.2f};   prius1 {3}:{4:.2f}".format(file_name, "yielded", prius0_temp_d2n,"passed",  prius1_temp_d2n))
-        elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
-            print("[{0}]    prius0 {1}:{2:.2f};   prius1 {3}:{4:.2f}".format(file_name, "passed", prius0_temp_d2n,"yielded",  prius1_temp_d2n))
 
+            prius0_file_name = path0.split('/')[-1]
+            prius1_file_name = path1.split('/')[-1]
+
+            if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
+                prius0.CAR_yield_analysis(prius0_file_name)
+                prius1.CAR_pass_analysis(prius1_file_name)
+
+            elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
+                prius0.CAR_pass_analysis(prius0_file_name)
+                prius1.CAR_yield_analysis(prius1_file_name)
+
+            final_CAR_list.append(prius0.ods_sub_data[0])
+            final_CAR_list.append(prius1.ods_sub_data[0])
+
+            print("{0}_{1} CAR analysis done.\n".format(driver_names, i+1))
+
+    data = OrderedDict()
+    data.update({"{0}".format(dir_name):final_CAR_list})
+    save_data("CAR_results.ods", data)
     

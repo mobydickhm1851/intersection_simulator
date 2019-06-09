@@ -9,7 +9,7 @@ import time
 
 maxVel = 5.0
 minVel = -maxVel
-accele = 0.035
+accele = 0.0035
 brake = accele*2.86
 friction = accele/3
 

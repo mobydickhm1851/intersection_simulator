@@ -64,7 +64,7 @@ class CarStates:
         current_time = pose.header.stamp.secs + pose.header.stamp.nsecs*1e-9
         
         # Plot from the moment they start to move
-        if abs(pose.twist.twist.linear.y) > 0.1 or abs(pose.twist.twist.linear.x) > 0.1:
+        if abs(pose.twist.twist.linear.y) > 0.1 or abs(pose.twist.twist.linear.x) > 0.1 or self.count == 1:
             
             if self.count == 0:
                 self.start_time = current_time

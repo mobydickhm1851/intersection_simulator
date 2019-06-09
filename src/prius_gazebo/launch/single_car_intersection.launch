@@ -24,7 +24,7 @@
   <group ns="prius0">  
     <param name="tf_prefix" value="prius0" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x -1 -y 25 -z 0 -Y -1.57" />
+      <arg name="init_pose" value="-x -25 -y -1 -z 0 -Y 0" />
       <arg name="robot_name" value="prius0" />
     </include>
   </group>
@@ -34,7 +34,7 @@
   <group ns="prius1">  
     <param name="tf_prefix" value="prius1" />  
     <include file="$(find prius_gazebo)/launch/includes/prius.xml">
-      <arg name="init_pose" value="-x -25 -y -1 -z 0 -Y 0 " />
+      <arg name="init_pose" value="-x 1 -y -25 -z 0 -Y 1.57 " />
       <arg name="robot_name" value="prius1" />
     </include>
   </group>
@@ -43,7 +43,7 @@
   <!-- ============= navigation of cars ============  
   <node name="car0_nav" type="car0_linear_nav.py" pkg="moby_stage" launch-prefix="xterm -e python -m pdb">
 -->
-  <arg name="cmap_size_default" default="60" />
+  <arg name="cmap_size_default" default="70" />
   <arg name="cmap_res_default" default="0.5" />
       
   <node name="prius1_nav" type="prius1_POS_nav.py" pkg="prius_control" output="screen" >
