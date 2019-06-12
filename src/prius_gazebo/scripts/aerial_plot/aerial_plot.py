@@ -38,7 +38,11 @@ car1_x_vel_arr = np.array([])
 car1_y_vel_arr = np.array([])
 
 # GET car0 data
-with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606_02/liuyc_prius1_13_prius0', "r") as car0_original_file:
+
+dir_name = "20190612_param_std"
+file_name = "liuyc_prius1_17"
+
+with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}_prius0'.format(dir_name, file_name), "r") as car0_original_file:
     #global time_arr, car0_x_pose_arr, car0_y_pose_arr
 
     #This should turn file contents into a list, by line, without \n
@@ -59,7 +63,7 @@ with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/
 
 
 # GET car1 data
-with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/20190606_02/liuyc_prius1_13_prius1', "r") as car1_original_file:
+with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}_prius1'.format(dir_name, file_name), "r") as car1_original_file:
 
     #This should turn file contents into a list, by line, without \n
     car1_original_list  = car1_original_file.read().splitlines() 
@@ -79,11 +83,11 @@ with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/
 
 #--- Parameters ---#
 
-alpha = .2
-R_min = 3    # meter
+alpha = 1.2
+R_min = 6.3    # meter
 tau = 0.6    # s
-a_dec = 3.4    # m/s^2
-slope = 0.45   # y = 0.65x + 0.15
+a_dec = 2.35    # m/s^2
+slope = 1.4285   # y = 0.65x + 0.15
     
 
 ###-------------------------------###

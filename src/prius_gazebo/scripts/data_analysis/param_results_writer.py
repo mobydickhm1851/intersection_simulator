@@ -17,14 +17,14 @@ from pyexcel_ods import get_data    # Dave data to .ods file for Calc
 
 class TxtData:
 
-    def __init__(self):
+    def __init__(self, ALPHA=.2, SLOPE=1.4285, A_DEC=2.35, R_MIN=6.3, TAU=0.6):
 
     #--- POS, CDF Parameters ---#
-        self.ALPHA = .2
-        self.SLOPE = 0.45   # y = 0.65x + 0.15
-        self.A_DEC = 1    # m/s^2
-        self.R_MIN = 3    # meter
-        self.TAU = 0.6    # s
+        self.ALPHA = ALPHA
+        self.SLOPE = SLOPE   # y = 0.65x + 0.15
+        self.A_DEC = A_DEC    # m/s^2
+        self.R_MIN = R_MIN    # meter
+        self.TAU = TAU    # s
 
     # Analysis Parameters
         self.VISIBLE_DIST = 12    # (m)
@@ -250,7 +250,7 @@ class TxtData:
         self.ods_sub_data.append(current_list)  
 
 
-    def get_param(self, file_name):
+    def get_param(self, file_name, use_average, ave_A_DEC, ave_R_MIN):
 
         car_acc_list = []    
         ave_begin_end = [0, 0]
@@ -265,7 +265,9 @@ class TxtData:
     # car_acc_list part
             temp_acc = (self.car_vel_list[i+1] - self.car_vel_list[i]) / time_res
             car_acc_list.append(float(temp_acc))
-    # average_acc part
+
+
+    # A_DEC (average_acc) part
             if ave_begin_end[0] == 0 and temp_acc < -0.01 : 
                 ave_begin_end[0] = i
                 print("BEGIN = {0}".format(i))
@@ -273,7 +275,7 @@ class TxtData:
                 ave_begin_end[1] = i
                 print("END = {0}".format(i))
 
-        self.ods_sub_data.append(car_acc_list)  
+        #self.ods_sub_data.append(car_acc_list)  
 
         # Incase the test end before car fully stopped
         if ave_begin_end[1] == 0:
@@ -283,11 +285,18 @@ class TxtData:
         acc_sum = sum(car_acc_list[ave_begin_end[0]:ave_begin_end[1]])
         acc_len = len(car_acc_list[ave_begin_end[0]:ave_begin_end[1]])
         print("acc_sum = {0}, acc_len = {1}".format(acc_sum, acc_len))
-        if acc_sum != 0 and acc_len != 0 :
-            average_acc = acc_sum/acc_len
 
-    # R_min part
-        R_MIN = abs(self.car_pose_list[-1])
+        if not use_average:
+            if acc_sum != 0 and acc_len != 0 :
+                average_acc = acc_sum/acc_len
+        else:
+            average_acc = ave_A_DEC
+
+    # R_MIN part
+        if not use_average:
+            R_MIN = abs(self.car_pose_list[-1])
+        else:
+            R_MIN = ave_R_MIN
 
     # TTA and TTA_est part
         # CAUTION:len(car_t2n_list) is shorter than len(car_vel_list) by 1        
@@ -296,18 +305,19 @@ class TxtData:
         # TTA_est
         R_I = v_TTA**2 / (2 * abs(average_acc))
         TTA_est = (R_I + v_TTA*self.TAU + R_MIN ) / v_TTA
-        TTA_act = TTA_est / self.SLOPE   # mean of the PDF
         slope = TTA / TTA_est
-        print("R_I is {0}. v_TTA is {1} YOYOYOYO ".format(R_I, v_TTA))
+        print("R_I is {0}. v_TTA is {1}. ".format(R_I, v_TTA))
         
-        return {"A_DEC":average_acc, "R_MIN":R_MIN, "TTA":TTA, "TTA_est":TTA_est, "TTA_act":TTA_act, "slope":slope}
+        return {"A_DEC":average_acc, "R_MIN":R_MIN, "TTA":TTA, "TTA_est":TTA_est, "slope":slope}
 
 
 if __name__ == '__main__':
 
     dir_name = "param_test"
+    driver_name = "wuch"
+    N = 10    # How many 
 
-    path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/liuyc*'.format(dir_name)
+    path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}*'.format(dir_name, driver_name)
     files = glob.glob(path)
 
 # File seperated by names
@@ -333,10 +343,16 @@ if __name__ == '__main__':
 # CAR classification
 
     final_param_list = []
+    A_DEC_list = []
+    R_MIN_list = []
+    SLOPE_list = []
+    tuned_SLOPE_list = []
+    TTA_list = []
+    trial_num_list = []
 
     for driver_names in file_list:
     # Default as 20 files (e.g. liuyc_*)
-        for i in range(10):   
+        for i in range(N):   
 
             print("Processing {0}_{1}.....".format(driver_names, i+1))
 
@@ -354,16 +370,101 @@ if __name__ == '__main__':
             # Get the final lists (x or y)
                 prius0.get_final_list()
             # Get acceleration list
-                params = prius0.get_param(prius0_file_name)
+                params = prius0.get_param(prius0_file_name, False, 0, 0)
 
-            final_param_list.append(prius0.ods_sub_data[0])
+            #final_param_list.append(prius0.ods_sub_data[0])
 
-            print("Got {0}_{1}'s param. average A_DEC = {2}. R_MIN = {3}. TTA = {4}. TTA_est = {5}. TTA_act = {6}. TTA/TTA_est = {7}\n".format(driver_names, i+1, params["A_DEC"], params["R_MIN"], params["TTA"], params["TTA_est"], params["TTA_act"], params["slope"]))
+        # save parameters
+            trial_num_list.append(driver_names+str(i+1))
+            A_DEC_list.append(float(params["A_DEC"]))
+            R_MIN_list.append(float(params["R_MIN"]))
+            SLOPE_list.append(float(params["slope"]))
+            TTA_list.append(float(params["TTA"]))
 
-    
-    #data = OrderedDict()
+            print("Got {0}_{1}'s param. average A_DEC = {2}. R_MIN = {3}. TTA = {4}. TTA_est = {5}. TTA/TTA_est = {6}\n".format(driver_names, i+1, params["A_DEC"], params["R_MIN"], params["TTA"], params["TTA_est"], params["slope"]))
+
+
+# average and std parameters list
+    # average
+    ave_A_DEC = sum(A_DEC_list) / len(A_DEC_list)
+    ave_R_MIN = sum(R_MIN_list) / len(R_MIN_list)
+    ave_SLOPE = sum(SLOPE_list) / len(SLOPE_list)
+    ave_TTA = sum(TTA_list) / len(TTA_list)
+
+    # std(Maximum Likelihood)
+    def getSTD(target_list, target_ave):
+        target_sum = 0.0
+        SIGMA=.0
+        for i in target_list:
+            target_sum += (float(i)-target_ave)**2 
+
+        SIGMA = (target_sum / len(target_list))**0.5
+
+        return SIGMA
+
+    sigma_A_DEC = getSTD(A_DEC_list, ave_A_DEC)
+    sigma_R_MIN = getSTD(R_MIN_list, ave_R_MIN)
+    sigma_SLOPE = getSTD(SLOPE_list, ave_SLOPE)
+    sigma_TTA = getSTD(TTA_list, ave_TTA)
+
+
+# Recalculate using average
+    for driver_names in file_list:
+    # Default as 20 files (e.g. liuyc_*)
+        for i in range(N):   
+
+            print("Using average to processing {0}_{1}.....".format(driver_names, i+1))
+
+        # prius0    
+            prius0 = TxtData()
+            prius0_temp_d2n = 0
+            path0 = real_path + driver_names +"_"+"{0}".format(i+1) + "_prius0"
+            prius0_file_name = path0.split('/')[-1]
+
+            with open(path0, "r") as f:
+            # Turn file contents into a list, by line, without \n
+                raw_list = f.read().splitlines()
+            # Update the arrays
+                prius0.update_arrays(raw_list)
+            # Get the final lists (x or y)
+                prius0.get_final_list()
+            # Get acceleration list
+                params = prius0.get_param(prius0_file_name, True, ave_A_DEC, ave_R_MIN)
+            tuned_SLOPE_list.append(float(params["slope"]))  
+
+# average and std parameters list
+    tuned_ave_SLOPE = sum(tuned_SLOPE_list) / len(tuned_SLOPE_list)
+    sigma_tuned_SLOPE = getSTD(tuned_SLOPE_list, tuned_ave_SLOPE)
+
+
+# Final list
+    trial_num_list.insert(0,"Trials")
+    A_DEC_list.insert(0,"A_DEC")
+    R_MIN_list.insert(0,"R_MIN")
+    SLOPE_list.insert(0,"SLOPE")
+    tuned_SLOPE_list.insert(0,"tuned_SLOPE")
+    TTA_list.insert(0,"TTA")
+
+# append average
+    trial_num_list.append("{0} Average".format(driver_name))
+    A_DEC_list.append(float(ave_A_DEC))
+    R_MIN_list.append(float(ave_R_MIN))
+    SLOPE_list.append(float(ave_SLOPE))
+    tuned_SLOPE_list.append(float(tuned_ave_SLOPE))
+    TTA_list.append(float(ave_TTA))
+            
+# append average
+    trial_num_list.append("{0} sigma (std)".format(driver_name))
+    A_DEC_list.append(float(sigma_A_DEC))
+    R_MIN_list.append(float(sigma_R_MIN))
+    SLOPE_list.append(float(sigma_SLOPE))
+    tuned_SLOPE_list.append(float(sigma_tuned_SLOPE))
+    TTA_list.append(float(sigma_TTA))
+
+
+    final_param_list = [trial_num_list]+[A_DEC_list]+[R_MIN_list]+[SLOPE_list]+[tuned_SLOPE_list]+[TTA_list]
+
     data = get_data("param_results.ods")
-    #data["{0}".format(path.split('/')[-1])] = final_param_list
-    data["{0}".format("liuyc_param_3nd")] = final_param_list
+    data["{0}_param_{1}st".format(driver_name, 4)] = final_param_list
     save_data("param_results.ods", data)
     

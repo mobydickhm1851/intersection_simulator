@@ -455,9 +455,10 @@ def update_costmap():
 #--- Parameters ---#
 
 alpha = .2
-slope = 0.45   # y = 0.65x + 0.15
-a_dec = 1    # m/s^2
-R_min = 3    # meter
+slope = 0.7441   
+STD = 0.09857   
+a_dec = 2.44    # m/s^2
+R_min = 6.4    # meter
 tau = 0.6    # s
     
 
@@ -475,9 +476,9 @@ def CDF(ttc):
 
     TTA_est = (R_i + v_obs*tau + R_min ) / v_obs
 
-    TTA_act = TTA_est / slope   # mean of the PDF
+    TTA_act = TTA_est * slope   # mean of the PDF
 
-    std = TTA_act * 0.375/2   # standard deviation of the PDF
+    std = STD   # standard deviation of the PDF
 
     cdf = norm(TTA_act, std).cdf(ttc)
     

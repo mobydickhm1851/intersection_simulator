@@ -11,19 +11,24 @@ import glob    # To get a list of all files in a directory
 import errno    
 from collections import OrderedDict
 from pyexcel_ods import save_data    # Dave data to .ods file for Calc
+from pyexcel_ods import get_data    # Dave data to .ods file for Calc
+import itertools
+import time
 
 
+time_start = time.time()
 
 class TxtData:
-
-    def __init__(self):
+    
+    def __init__(self, param_dict={'ALPHA':0.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}):
 
     #--- POS, CDF Parameters ---#
-        self.ALPHA = .2
-        self.SLOPE = 0.45   # y = 0.65x + 0.15
-        self.A_DEC = 1    # m/s^2
-        self.R_MIN = 3    # meter
-        self.TAU = 0.6    # s
+        self.ALPHA = param_dict['ALPHA']
+        self.SLOPE = param_dict['SLOPE']   
+        self.STD = param_dict['STD']   
+        self.A_DEC = param_dict['A_DEC']    # m/s^2
+        self.R_MIN = param_dict['R_MIN']    # meter
+        self.TAU = param_dict['TAU']    # s
 
     # Analysis Parameters
         self.VISIBLE_DIST = 12    # (m)
@@ -83,8 +88,8 @@ class TxtData:
         #--- Get the estimated TTA ---#
         R_I = v_car**2 / (2 * self.A_DEC)
         TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car
-        TTA_act = TTA_est / self.SLOPE   # mean of the PDF
-        std = TTA_act * 0.375/2    # standard deviation of the PDF
+        TTA_act = TTA_est * self.SLOPE   # mean of the PDF
+        std = self.STD    # standard deviation of the PDF
         cdf = norm(TTA_act, std).cdf(TTC)
         
         return cdf
@@ -178,7 +183,7 @@ class TxtData:
 
     # Start counting from where the ego car can see the coming car
         for p in range(len(self.car_pose_list)):
-            if abs(self.car_pose_list[p]) >= self.VISIBLE_DIST:
+            if abs(self.car_pose_list[p]) <= self.VISIBLE_DIST:
                 self.car_t_list = self.car_t_list[p:]
                 self.car_vel_list = self.car_vel_list[p:]
                 self.car_pose_list = self.car_pose_list[p:]
@@ -249,42 +254,15 @@ class TxtData:
         self.ods_sub_data.append(current_list)  
 
 
-    def analyze_all(self, file_path):
-
-        path = file_path
-        files = glob.glob(path)
-
-        # Analyze every "set" of file
-        for name in files:
-            try:
-                with open(name, "r") as f:
-                    # Turn file contents into a list, by line, without \n
-                    raw_list = f.read().splitlines()
-                    # Update the arrays
-                    self.update_arrays(raw_list)
-                    # Get the final lists (x or y)
-                    self.get_final_list()
-                    file_name = name.split('/')[-1]
-                    self.CAR_analysis(file_name)
-                    # Do something
-                    # Reset arrays
-                    self.reset_arrays()
-
-            except IOError as exc:
-                if exc.errno != errno.EISDIR:
-                    raise
-
-        data = OrderedDict()
-        data.update({"20190606_1":self.ods_sub_data})
-        save_data("CAR_results_yield.ods", data)
-
 
 
 if __name__ == '__main__':
 
-    dir_name = "20190606_02"
-
+##SETING01##
+    dir_name = "20190612_param_std"
     path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*prius*'.format(dir_name)
+
+
     files = glob.glob(path)
 
 # File seperated by names
@@ -309,65 +287,147 @@ if __name__ == '__main__':
 
 # CAR classification
 
-    final_CAR_list = []
+##SETING02##
+    param_dict_0 = {'ALPHA':0.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}   # LiuYC's params
+    #param_dict_0 = {'ALPHA':0.2, 'SLOPE':0.621, 'STD':0.058, 'A_DEC':1.956, 'R_MIN':7.23, 'TAU':0.6}   # WuCH's params
+    #param_dict_1 = param_dict_0
+    #param_dict_1 = {'ALPHA':.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}
 
-    for driver_names in file_list:
-    # Default as 20 files (e.g. liuyc_lukc_1_prius*)
-        for i in range(20):   
+# Loop for different params (sensitivity test)
 
-            print("Processing {0}_{1}.....".format(driver_names, i+1))
+    param_num_dict = {'ALPHA':0, 'SLOPE':1, 'STD':2, 'A_DEC':3, 'R_MIN':4, 'TAU':5}   # LiuYC's params
+    ALPHA_list = np.arange(0.1, 2.3, 0.2)    #arange(upper, lower, step)
+    SLOPE_list = np.arange(0.1, 1.2, 0.1)    #arange(upper, lower, step)
+    STD_list = np.arange(0.01, 0.032, 0.002)    #arange(upper, lower, step)
+    A_DEC_list = np.arange(1.0, 8.7, 0.7)    #arange(upper, lower, step)
+    R_MIN_list = np.arange(2.0, 10.8, 0.8)    #arange(upper, lower, step)
+    TAU_list = np.arange(0.1, 1.2, 0.1)    #arange(upper, lower, step)
 
-        # prius0    
-            prius0 = TxtData()
-            prius0_temp_d2n = 0
-            path0 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius0"
-            with open(path0, "r") as f:
-            # Turn file contents into a list, by line, without \n
-                raw_list = f.read().splitlines()
-            # Update the arrays
-                prius0.update_arrays(raw_list)
-            # Get the final lists (x or y)
-                prius0.get_final_list()
-            # Get the last distance
-                prius0_temp_d2n = abs(prius0.car_pose_list[-1])
-            # Reset (not needed in a for loop)
-            #    prius0.reset_arrays()
+##SETING03##
+    set_param = "A_DEC"
+    FILE_NUM = 20
+    final_ods_list = [] 
+    final_ods_list_0 = [] 
+    final_ods_list_1 = [] 
 
-
-        # prius1    
-            prius1 = TxtData()
-            prius1_temp_d2n = 0
-            path1 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius1"
-            with open(path1, "r") as f:
-            # Turn file contents into a list, by line, without \n
-                raw_list = f.read().splitlines()
-            # Update the arrays
-                prius1.update_arrays(raw_list)
-            # Get the final lists (x or y)
-                prius1.get_final_list()
-            # Get the last distance
-                prius1_temp_d2n = abs(prius1.car_pose_list[-1])
-            # Reset (not needed in a for loop)
-            #    prius1.reset_arrays()
+    if set_param == "ALPHA" : temp_list = ALPHA_list
+    elif set_param == "SLOPE" : temp_list = SLOPE_list
+    elif set_param == "STD" : temp_list = STD_list
+    elif set_param == "A_DEC" : temp_list = A_DEC_list
+    elif set_param == "R_MIN" : temp_list = R_MIN_list
+    elif set_param == "TAU" : temp_list = TAU_list
 
 
-            prius0_file_name = path0.split('/')[-1]
-            prius1_file_name = path1.split('/')[-1]
+    for param in temp_list:
 
-            if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
-                prius0.CAR_yield_analysis(prius0_file_name)
-                prius1.CAR_pass_analysis(prius1_file_name)
+        param_dict_0[set_param] = param
+        param_dict_1 = param_dict_0
 
-            elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
-                prius0.CAR_pass_analysis(prius0_file_name)
-                prius1.CAR_yield_analysis(prius1_file_name)
+        final_CAR_list_0 = []
+        final_CAR_list_1 = []
 
-            final_CAR_list.append(prius0.ods_sub_data[0])
-            final_CAR_list.append(prius1.ods_sub_data[0])
+        for driver_names in file_list:
+        # Default as 20 files (e.g. liuyc_lukc_1_prius*)
+            for i in range(FILE_NUM):   
 
-            print("{0}_{1} CAR analysis done.\n".format(driver_names, i+1))
+                print("Processing {0}_{1} using {2}={3}.....".format(driver_names, i+1, set_param, param))
 
-    data = OrderedDict()
-    data.update({"{0}".format(dir_name):final_CAR_list})
-    save_data("CAR_results.ods", data)
+##SETING04##
+            # prius01 
+                prius0 = TxtData(param_dict_0)
+                prius0_temp_d2n = 0
+                path0 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius0"
+                with open(path0, "r") as f:
+                # Turn file contents into a list, by line, without \n
+                    raw_list = f.read().splitlines()
+                # Update the arrays
+                    prius0.update_arrays(raw_list)
+                # Get the final lists (x or y)
+                    prius0.get_final_list()
+                # Get the last distance
+                    prius0_temp_d2n = abs(prius0.car_pose_list[-1])
+                # Reset (not needed in a for loop)
+                #    prius0.reset_arrays()
+
+
+            # prius1    
+                prius1 = TxtData(param_dict_1)
+                prius1_temp_d2n = 0
+                path1 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius1"
+                with open(path1, "r") as f:
+                # Turn file contents into a list, by line, without \n
+                    raw_list = f.read().splitlines()
+                # Update the arrays
+                    prius1.update_arrays(raw_list)
+                # Get the final lists (x or y)
+                    prius1.get_final_list()
+                # Get the last distance
+                    prius1_temp_d2n = abs(prius1.car_pose_list[-1])
+                # Reset (not needed in a for loop)
+                #    prius1.reset_arrays()
+
+
+                prius0_file_name = path0.split('/')[-1]
+                prius1_file_name = path1.split('/')[-1]
+
+                if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
+                    prius0.CAR_yield_analysis(prius0_file_name)
+                    prius1.CAR_pass_analysis(prius1_file_name)
+
+                elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
+                    prius0.CAR_pass_analysis(prius0_file_name)
+                    prius1.CAR_yield_analysis(prius1_file_name)
+
+                final_CAR_list_0.append(prius0.ods_sub_data[0])
+                final_CAR_list_1.append(prius1.ods_sub_data[0])
+
+                print("{0}_{1} CAR analysis done.\n".format(driver_names, i+1))
+
+
+    # Add the sumation of final_CAR_list_0 into itself
+        # copy the list (list.copy() available in 3.3)
+        print("Adding {0} prius0 CAR results together.".format(FILE_NUM))
+        dummy_CAR_list_0 = final_CAR_list_0[:]
+        summed_CAR_list_0 = []
+        for i in final_CAR_list_0:
+            i = i[1:]    # remove the name tag
+            summed_CAR_list_0 = map(sum,itertools.izip_longest(summed_CAR_list_0, i, fillvalue = 0))   # list has different length
+
+        summed_CAR_list_0 = list(np.array(summed_CAR_list_0) / float(FILE_NUM))
+        summed_CAR_list_0 = [float(j) for j in summed_CAR_list_0]
     
+        summed_CAR_list_0.insert(0, "prius0_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU']))
+        #####final_CAR_list_0.append(summed_CAR_list_0)
+
+    # Add the sumation of final_CAR_list_1 into itself
+        # copy the list (list.copy() available in 3.3)
+        print("Adding {0} prius1 CAR results together.".format(FILE_NUM))
+        dummy_CAR_list_1 = final_CAR_list_1[:]
+        summed_CAR_list_1 = []
+        for i in final_CAR_list_1:
+            i = i[1:]    # remove the name tag
+            summed_CAR_list_1 = map(sum,itertools.izip_longest(summed_CAR_list_1, i, fillvalue = 0))   # list has different length
+
+        summed_CAR_list_1 = list(np.array(summed_CAR_list_1) / float(FILE_NUM))
+        summed_CAR_list_1 = [float(j) for j in summed_CAR_list_1]
+    
+        summed_CAR_list_1.insert(0, "prius1_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_1['ALPHA'], param_dict_1['SLOPE'], param_dict_1['STD'], param_dict_1['A_DEC'], param_dict_1['R_MIN'], param_dict_1['TAU']))
+        #####final_CAR_list_0.append(summed_CAR_list_0)
+
+        final_ods_list_0.append(summed_CAR_list_0)
+        final_ods_list_1.append(summed_CAR_list_1)
+        print("Done adding CAR results together.")
+
+    
+    final_ods_list = final_ods_list_0 + final_ods_list_1 
+
+    print("Opening file CAR_results.ods .")
+
+    data = get_data("CAR_results.ods")
+    #####data["liuyc_{2}_{1}_test{0}".format(dir_name.split('_')[1:], param, set_param)] = final_CAR_list
+    data["liuyc_{0}_sensitivity_test".format(set_param)] = final_ods_list
+    print("Saving param {0} to ods file.".format(set_param))
+    save_data("CAR_results.ods", data)
+    print("Done saving to ods file.")
+    print("The whole process takes {0:.2f} seconds.".format(time.time()-time_start))
+

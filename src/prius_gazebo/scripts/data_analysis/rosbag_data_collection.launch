@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="dir_name" default="param_test/" />
+    <arg name="dir_name" default="20190612_param_std/" />
     <arg name="rosbag_name" />
 
 <!-- Write data into txt -->
-    <node name="rosbag_data_writer" type="rosbag_param_collection.py" pkg="prius_gazebo" output="screen" >
+    <node name="rosbag_data_writer" type="rosbag_data_collection.py" pkg="prius_gazebo" output="screen" >
         <param name="dir_name" type="string" value="$(arg dir_name)" />
         <param name="file_name" type="string" value="$(arg rosbag_name)" />
     </node>
