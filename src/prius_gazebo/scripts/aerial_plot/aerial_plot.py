@@ -37,10 +37,21 @@ car1_y_pose_arr = np.array([])
 car1_x_vel_arr = np.array([])
 car1_y_vel_arr = np.array([])
 
+
+#--- Parameters ---#
+
+alpha = 0.001
+slope = 0.7441   
+STD = 0.09857   
+a_dec = 2.44    # m/s^2
+R_min = 10.4    # meter
+tau = 0.6    # s
+    
+
 # GET car0 data
 
 dir_name = "20190612_param_std"
-file_name = "liuyc_prius1_17"
+file_name = "liuyc_prius1_2"
 
 with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}_prius0'.format(dir_name, file_name), "r") as car0_original_file:
     #global time_arr, car0_x_pose_arr, car0_y_pose_arr
@@ -80,16 +91,6 @@ with open(r'/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/
         car1_x_vel_arr = np.append(car1_x_vel_arr, float(row.split(",")[3]), )
         car1_y_vel_arr = np.append(car1_y_vel_arr, float(row.split(",")[4]), )
 
-
-#--- Parameters ---#
-
-alpha = 1.2
-R_min = 6.3    # meter
-tau = 0.6    # s
-a_dec = 2.35    # m/s^2
-slope = 1.4285   # y = 0.65x + 0.15
-    
-
 ###-------------------------------###
 ###---Time to Action Estimation---###
 ###-------------------------------###
@@ -102,12 +103,13 @@ def CDF(ttc,v_car):
 
     TTA_est = (R_i + v_car*tau + R_min ) / v_car
 
-    TTA_act = TTA_est / slope   # mean of the PDF
+    TTA_act = TTA_est * slope   # mean of the PDF
 
-    std = TTA_act * 0.375/2   # standard deviation of the PDF
+    std = TTA_est * STD   # standard deviation of the PDF
 
     cdf = norm(TTA_act, std).cdf(ttc)
     
+    print("ttc now is {0} where mu = {1}, std = {2}".format(ttc, TTA_act, std))
     return cdf
     
 ###----------------------------------- ###
@@ -212,10 +214,8 @@ def plot_figs_together():
 
     every_num = 7
 
-    print("before fun. {0}".format(car0_t))
     
     car0_t = average_every(car0_t, every_num)
-    print("after fun. {0}".format(car0_t))
     car0_pose = average_every(car0_pose, every_num)
     car0_vel = average_every(car0_vel, every_num)
     car1_t = average_every(car1_t, every_num)
@@ -247,6 +247,7 @@ def plot_figs_together():
 
 ########### END OF PROCESSING DATA #############
 
+    print(car0_t2n)
 
     fig1 = plt.figure(1, figsize=(12,18))
     ax11 = fig1.add_subplot(211)
@@ -286,9 +287,9 @@ def plot_figs_together():
     ax22.set_ylabel('probability of stopping')
     # to keep 0 of two axis aligned
     ax11.set_ylim(-6,6)
-    ax12.set_ylim(-0.2, max(car1_POS+car0_POS))
+    ax12.set_ylim(-0.2, max(car0_POS+car1_POS)+0.2)
     ax21.set_ylim(-30,30)
-    ax22.set_ylim(-0.2, max(car1_POS+car0_POS))
+    ax22.set_ylim(-0.2, max(car0_POS+car1_POS)+0.2)
     
     handles1=[line11, line12, line13, line14]
     labels1 = [h.get_label() for h in handles1]

@@ -82,7 +82,7 @@ class CarStates:
 
 
     # for param_test, car0 is stopped near the intersection in X-DIR
-            if abs(self.car_posi[1]) < 10  and abs(self.car_vel[1]) < 0.01:
+            if abs(self.car_posi[1]) < 12  and abs(self.car_vel[1]) < 0.01:
                 self.count = 2
                 print("Ending as prius0 stopped moving")
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     
     while not rospy.is_shutdown():
         try:
-            print(prius0.count)
+            print(prius0.car_posi[1])
             if prius0.terminate() :
                 prius0.export_profile()
                 rospy.signal_shutdown('The param test is done.')

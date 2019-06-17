@@ -39,6 +39,14 @@
     </include>
   </group>
 
+  <!-- ============= navigation of cars ============  
+  <node name="car0_nav" type="car0_linear_nav.py" pkg="moby_stage" launch-prefix="xterm -e python -m pdb">
+      
+  <node name="prius1_const_vel" type="prius1_const_vel.py" pkg="prius_control" output="screen" >
+    <param name="robot_ns" value="prius1" />
+    <param name="init_vel" type="double" value="5.0" />
+  </node>
 
+-->
 
 </launch>

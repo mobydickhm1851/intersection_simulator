@@ -234,7 +234,6 @@ class TxtData:
         # copy the list (list.copy() available in 3.3)
         time_line = self.car_POS_t_list[:]
         t_minus = time_line[::-1]   # reverse the list
- #       print("t_minus is {0}".format(t_minus))
         t_minus = list(np.array(t_minus) - t_minus[0])
 
         POS_list = self.car_POS_list[:]
@@ -267,7 +266,7 @@ class TxtData:
             car_acc_list.append(float(temp_acc))
 
 
-    # A_DEC (average_acc) part
+    # A_DEC (average_acc) part: pre process
             if ave_begin_end[0] == 0 and temp_acc < -0.01 : 
                 ave_begin_end[0] = i
                 print("BEGIN = {0}".format(i))
@@ -286,36 +285,46 @@ class TxtData:
         acc_len = len(car_acc_list[ave_begin_end[0]:ave_begin_end[1]])
         print("acc_sum = {0}, acc_len = {1}".format(acc_sum, acc_len))
 
-        if not use_average:
-            if acc_sum != 0 and acc_len != 0 :
-                average_acc = acc_sum/acc_len
-        else:
-            average_acc = ave_A_DEC
-
-    # R_MIN part
-        if not use_average:
-            R_MIN = abs(self.car_pose_list[-1])
-        else:
-            R_MIN = ave_R_MIN
 
     # TTA and TTA_est part
         # CAUTION:len(car_t2n_list) is shorter than len(car_vel_list) by 1        
         TTA = self.car_t2n_list[ave_begin_end[0]]
         v_TTA = self.car_vel_list[ave_begin_end[0]]
-        # TTA_est
-        R_I = v_TTA**2 / (2 * abs(average_acc))
-        TTA_est = (R_I + v_TTA*self.TAU + R_MIN ) / v_TTA
-        slope = TTA / TTA_est
-        print("R_I is {0}. v_TTA is {1}. ".format(R_I, v_TTA))
+
+# without average A_DEC and R_MIN
+        if not use_average:
+    # A_DEC (average_acc) 
+            if acc_sum != 0 and acc_len != 0 :
+                average_acc = acc_sum/acc_len
+            
+            R_I = abs(self.car_pose_list[ave_begin_end[1]]-self.car_pose_list[ave_begin_end[0]])
+    # R_MIN part
+            R_MIN = abs(self.car_pose_list[ave_begin_end[-1]])
+            riR_MIN = TTA*v_TTA - v_TTA*self.TAU - R_I
+            riA_DEC = v_TTA**2/(2*R_I)
+
+            return {"A_DEC":average_acc, "TTA":TTA, "R_I":R_I, "riR_MIN":riR_MIN, "riA_DEC":riA_DEC, "v_TTA":v_TTA ,"R_MIN":R_MIN}
+
+
+# with both average A_DEC and R_MIN
+        elif  use_average :
+
+            R_MIN = ave_R_MIN
+            average_acc = ave_A_DEC
+    # SLOPE 
+            R_I = v_TTA**2 / (2 * abs(average_acc))
+            TTA_est = (R_I + v_TTA*self.TAU + R_MIN ) / v_TTA
+            slope = TTA / TTA_est
+            #print("R_I is {0}. v_TTA is {1}. ".format(R_I, v_TTA))
         
-        return {"A_DEC":average_acc, "R_MIN":R_MIN, "TTA":TTA, "TTA_est":TTA_est, "slope":slope}
+            return {"slope":slope}
 
 
 if __name__ == '__main__':
 
     dir_name = "param_test"
-    driver_name = "wuch"
-    N = 10    # How many 
+    driver_name = "lukc"
+    N = 20    # How many 
 
     path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}*'.format(dir_name, driver_name)
     files = glob.glob(path)
@@ -324,7 +333,7 @@ if __name__ == '__main__':
     file_list = []
     for name in files:
         file_name_list = name.split('/')[-1].split("_")
-        file_name = file_name_list[0]
+        file_name = file_name_list[0]  # liuyc_likc ==> liuyc
         if len(file_list) == 0:
             file_list.append(file_name)
         else:
@@ -345,6 +354,10 @@ if __name__ == '__main__':
     final_param_list = []
     A_DEC_list = []
     R_MIN_list = []
+    R_I_list = []
+    riA_DEC_list = []
+    riR_MIN_list = []
+    v_TTA_list = []
     SLOPE_list = []
     tuned_SLOPE_list = []
     TTA_list = []
@@ -372,26 +385,20 @@ if __name__ == '__main__':
             # Get acceleration list
                 params = prius0.get_param(prius0_file_name, False, 0, 0)
 
-            #final_param_list.append(prius0.ods_sub_data[0])
-
         # save parameters
             trial_num_list.append(driver_names+str(i+1))
             A_DEC_list.append(float(params["A_DEC"]))
-            R_MIN_list.append(float(params["R_MIN"]))
-            SLOPE_list.append(float(params["slope"]))
             TTA_list.append(float(params["TTA"]))
+            R_I_list.append(float(params["R_I"]))
+            riA_DEC_list.append(float(params["riA_DEC"]))
+            riR_MIN_list.append(float(params["riR_MIN"]))
+            v_TTA_list.append(float(params["v_TTA"]))
+            R_MIN_list.append(float(params["R_MIN"]))
 
-            print("Got {0}_{1}'s param. average A_DEC = {2}. R_MIN = {3}. TTA = {4}. TTA_est = {5}. TTA/TTA_est = {6}\n".format(driver_names, i+1, params["A_DEC"], params["R_MIN"], params["TTA"], params["TTA_est"], params["slope"]))
+            print("Got {0}_{1}'s param. average A_DEC = {2}. TTA = {3}.\n".format(driver_names, i+1, params["A_DEC"], params["TTA"]))
 
 
-# average and std parameters list
-    # average
-    ave_A_DEC = sum(A_DEC_list) / len(A_DEC_list)
-    ave_R_MIN = sum(R_MIN_list) / len(R_MIN_list)
-    ave_SLOPE = sum(SLOPE_list) / len(SLOPE_list)
-    ave_TTA = sum(TTA_list) / len(TTA_list)
-
-    # std(Maximum Likelihood)
+# std(Maximum Likelihood)
     def getSTD(target_list, target_ave):
         target_sum = 0.0
         SIGMA=.0
@@ -402,13 +409,27 @@ if __name__ == '__main__':
 
         return SIGMA
 
+# average and std parameters list
+    # average
+    ave_A_DEC = sum(A_DEC_list) / len(A_DEC_list)
+    ave_TTA = sum(TTA_list) / len(TTA_list)
+    ave_R_I = sum(R_I_list) / len(R_I_list)
+    ave_riA_DEC = sum(riA_DEC_list) / len(riA_DEC_list)
+    ave_riR_MIN = sum(riR_MIN_list) / len(riR_MIN_list)
+    ave_v_TTA = sum(v_TTA_list) / len(v_TTA_list)
+
     sigma_A_DEC = getSTD(A_DEC_list, ave_A_DEC)
-    sigma_R_MIN = getSTD(R_MIN_list, ave_R_MIN)
-    sigma_SLOPE = getSTD(SLOPE_list, ave_SLOPE)
     sigma_TTA = getSTD(TTA_list, ave_TTA)
+    sigma_R_I = getSTD(R_I_list, ave_R_I)
+    sigma_riA_DEC = getSTD(riA_DEC_list, ave_riA_DEC)
+    sigma_riR_MIN = getSTD(riR_MIN_list, ave_riR_MIN)
+    sigma_v_TTA = getSTD(v_TTA_list, ave_v_TTA)
 
+# average and std parameters list
+    ave_R_MIN = sum(R_MIN_list) / len(R_MIN_list)
+    sigma_R_MIN = getSTD(R_MIN_list, ave_R_MIN)
 
-# Recalculate using average
+# Recalculate using R_MIN average
     for driver_names in file_list:
     # Default as 20 files (e.g. liuyc_*)
         for i in range(N):   
@@ -429,42 +450,55 @@ if __name__ == '__main__':
             # Get the final lists (x or y)
                 prius0.get_final_list()
             # Get acceleration list
-                params = prius0.get_param(prius0_file_name, True, ave_A_DEC, ave_R_MIN)
+                params = prius0.get_param(prius0_file_name, True, ave_riA_DEC, ave_R_MIN)
             tuned_SLOPE_list.append(float(params["slope"]))  
+
+            print("Got {0}_{1}'s param. TTA/TTA_est(slope) = {2}\n".format(driver_names, i+1,  params["slope"]))
+
 
 # average and std parameters list
     tuned_ave_SLOPE = sum(tuned_SLOPE_list) / len(tuned_SLOPE_list)
     sigma_tuned_SLOPE = getSTD(tuned_SLOPE_list, tuned_ave_SLOPE)
 
+######################################################################
 
 # Final list
     trial_num_list.insert(0,"Trials")
     A_DEC_list.insert(0,"A_DEC")
     R_MIN_list.insert(0,"R_MIN")
-    SLOPE_list.insert(0,"SLOPE")
+    riA_DEC_list.insert(0,"riA_DEC")
+    riR_MIN_list.insert(0,"riR_MIN")
+    R_I_list.insert(0,"R_I")
     tuned_SLOPE_list.insert(0,"tuned_SLOPE")
     TTA_list.insert(0,"TTA")
+    v_TTA_list.insert(0,"v_TTA")
 
 # append average
     trial_num_list.append("{0} Average".format(driver_name))
     A_DEC_list.append(float(ave_A_DEC))
     R_MIN_list.append(float(ave_R_MIN))
-    SLOPE_list.append(float(ave_SLOPE))
+    riA_DEC_list.append(float(ave_riA_DEC))
+    riR_MIN_list.append(float(ave_riR_MIN))
+    R_I_list.append(float(ave_R_I))
     tuned_SLOPE_list.append(float(tuned_ave_SLOPE))
     TTA_list.append(float(ave_TTA))
+    v_TTA_list.append(float(ave_v_TTA))
             
 # append average
     trial_num_list.append("{0} sigma (std)".format(driver_name))
     A_DEC_list.append(float(sigma_A_DEC))
     R_MIN_list.append(float(sigma_R_MIN))
-    SLOPE_list.append(float(sigma_SLOPE))
+    riA_DEC_list.append(float(sigma_riA_DEC))
+    riR_MIN_list.append(float(sigma_riR_MIN))
+    R_I_list.append(float(sigma_R_I))
     tuned_SLOPE_list.append(float(sigma_tuned_SLOPE))
     TTA_list.append(float(sigma_TTA))
+    v_TTA_list.append(float(sigma_v_TTA))
 
 
-    final_param_list = [trial_num_list]+[A_DEC_list]+[R_MIN_list]+[SLOPE_list]+[tuned_SLOPE_list]+[TTA_list]
+    final_param_list = [trial_num_list]+[A_DEC_list]+[R_MIN_list]+[riA_DEC_list]+[riR_MIN_list]+[R_I_list]+[tuned_SLOPE_list]+[TTA_list]+[v_TTA_list]
 
     data = get_data("param_results.ods")
-    data["{0}_param_{1}st".format(driver_name, 4)] = final_param_list
+    data["{0}_param_{1}".format(driver_name, 8)] = final_param_list
     save_data("param_results.ods", data)
     

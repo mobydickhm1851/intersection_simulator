@@ -89,7 +89,7 @@ class TxtData:
         R_I = v_car**2 / (2 * self.A_DEC)
         TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car
         TTA_act = TTA_est * self.SLOPE   # mean of the PDF
-        std = self.STD    # standard deviation of the PDF
+        std = TTA_est * self.STD    # standard deviation of the PDF
         cdf = norm(TTA_act, std).cdf(TTC)
         
         return cdf
@@ -238,7 +238,12 @@ class TxtData:
         # copy the list (list.copy() available in 3.3)
         time_line = self.car_POS_t_list[:]
         t_minus = time_line[::-1]   # reverse the list
- #       print("t_minus is {0}".format(t_minus))
+        '''
+        print("t_minus is {0}".format(t_minus))
+        print("car_POS_t_list is {0}".format(self.car_POS_t_list))
+        print("car_t_list is {0}".format(self.car_t_list))
+        print("time_arr is {0}".format(self.time_arr))
+        '''
         t_minus = list(np.array(t_minus) - t_minus[0])
 
         POS_list = self.car_POS_list[:]
@@ -259,7 +264,7 @@ class TxtData:
 if __name__ == '__main__':
 
 ##SETING01##
-    dir_name = "20190612_param_std"
+    dir_name = "liuyc_0"
     path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*prius*'.format(dir_name)
 
 
@@ -288,24 +293,27 @@ if __name__ == '__main__':
 # CAR classification
 
 ##SETING02##
-    param_dict_0 = {'ALPHA':0.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}   # LiuYC's params
+    param_dict_0 = {'ALPHA':0.3, 'SLOPE':0.81, 'STD':0.101, 'A_DEC':3.076,'R_MIN':7.73, 'TAU':0.6}   # LiuYC's params
     #param_dict_0 = {'ALPHA':0.2, 'SLOPE':0.621, 'STD':0.058, 'A_DEC':1.956, 'R_MIN':7.23, 'TAU':0.6}   # WuCH's params
     #param_dict_1 = param_dict_0
     #param_dict_1 = {'ALPHA':.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}
 
 # Loop for different params (sensitivity test)
 
-    param_num_dict = {'ALPHA':0, 'SLOPE':1, 'STD':2, 'A_DEC':3, 'R_MIN':4, 'TAU':5}   # LiuYC's params
     ALPHA_list = np.arange(0.1, 2.3, 0.2)    #arange(upper, lower, step)
-    SLOPE_list = np.arange(0.1, 1.2, 0.1)    #arange(upper, lower, step)
-    STD_list = np.arange(0.01, 0.032, 0.002)    #arange(upper, lower, step)
+    SLOPE_list = np.arange(0.1, 2.3, 0.2)    #arange(upper, lower, step)
+    STD_list = np.arange(0.01, 0.23, 0.02)    #arange(upper, lower, step)
     A_DEC_list = np.arange(1.0, 8.7, 0.7)    #arange(upper, lower, step)
-    R_MIN_list = np.arange(2.0, 10.8, 0.8)    #arange(upper, lower, step)
+    R_MIN_list = np.arange(5.0, 16, 1.0)    #arange(upper, lower, step)
     TAU_list = np.arange(0.1, 1.2, 0.1)    #arange(upper, lower, step)
+    thresh_list = np.arange(0.1, 1.2, 0.1)    #arange(upper, lower, step)
 
 ##SETING03##
-    set_param = "A_DEC"
-    FILE_NUM = 20
+    set_param = "ALPHA"
+    FILE_NUM = 14
+
+    yield_count_0 = 0
+    pass_count_0 = 0
     final_ods_list = [] 
     final_ods_list_0 = [] 
     final_ods_list_1 = [] 
@@ -316,11 +324,13 @@ if __name__ == '__main__':
     elif set_param == "A_DEC" : temp_list = A_DEC_list
     elif set_param == "R_MIN" : temp_list = R_MIN_list
     elif set_param == "TAU" : temp_list = TAU_list
+    elif set_param == "threshold" : temp_list = thresh_list
 
 
     for param in temp_list:
 
-        param_dict_0[set_param] = param
+        if set_param != "threshold":
+            param_dict_0[set_param] = param
         param_dict_1 = param_dict_0
 
         final_CAR_list_0 = []
@@ -335,6 +345,11 @@ if __name__ == '__main__':
 ##SETING04##
             # prius01 
                 prius0 = TxtData(param_dict_0)
+                if set_param == "threshold":
+                    prius0.POS_YIELD_THRESH=param
+                    prius0.POS_PASS_THRESH=param
+
+
                 prius0_temp_d2n = 0
                 path0 = real_path + driver_names +"_"+"{0}".format(i+1)+"_"+"prius0"
                 with open(path0, "r") as f:
@@ -373,10 +388,12 @@ if __name__ == '__main__':
                 if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
                     prius0.CAR_yield_analysis(prius0_file_name)
                     prius1.CAR_pass_analysis(prius1_file_name)
+                    yield_count_0 += 1
 
                 elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
                     prius0.CAR_pass_analysis(prius0_file_name)
                     prius1.CAR_yield_analysis(prius1_file_name)
+                    pass_count_0 += 1
 
                 final_CAR_list_0.append(prius0.ods_sub_data[0])
                 final_CAR_list_1.append(prius1.ods_sub_data[0])
@@ -393,10 +410,10 @@ if __name__ == '__main__':
             i = i[1:]    # remove the name tag
             summed_CAR_list_0 = map(sum,itertools.izip_longest(summed_CAR_list_0, i, fillvalue = 0))   # list has different length
 
-        summed_CAR_list_0 = list(np.array(summed_CAR_list_0) / float(FILE_NUM))
+        summed_CAR_list_0 = list(np.array(summed_CAR_list_0) /len(file_list) /float(FILE_NUM))
         summed_CAR_list_0 = [float(j) for j in summed_CAR_list_0]
     
-        summed_CAR_list_0.insert(0, "prius0_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU']))
+        summed_CAR_list_0.insert(0, "prius0_{0}-{1}-{2}-{3}-{4}-{5}_{6}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU'],param))
         #####final_CAR_list_0.append(summed_CAR_list_0)
 
     # Add the sumation of final_CAR_list_1 into itself
@@ -408,10 +425,10 @@ if __name__ == '__main__':
             i = i[1:]    # remove the name tag
             summed_CAR_list_1 = map(sum,itertools.izip_longest(summed_CAR_list_1, i, fillvalue = 0))   # list has different length
 
-        summed_CAR_list_1 = list(np.array(summed_CAR_list_1) / float(FILE_NUM))
+        summed_CAR_list_1 = list(np.array(summed_CAR_list_1) /len(file_list)/ float(FILE_NUM))
         summed_CAR_list_1 = [float(j) for j in summed_CAR_list_1]
     
-        summed_CAR_list_1.insert(0, "prius1_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_1['ALPHA'], param_dict_1['SLOPE'], param_dict_1['STD'], param_dict_1['A_DEC'], param_dict_1['R_MIN'], param_dict_1['TAU']))
+        summed_CAR_list_1.insert(0, "prius1_{0}-{1}-{2}-{3}-{4}-{5}_{6}".format(param_dict_1['ALPHA'], param_dict_1['SLOPE'], param_dict_1['STD'], param_dict_1['A_DEC'], param_dict_1['R_MIN'], param_dict_1['TAU'],param))
         #####final_CAR_list_0.append(summed_CAR_list_0)
 
         final_ods_list_0.append(summed_CAR_list_0)
@@ -425,9 +442,10 @@ if __name__ == '__main__':
 
     data = get_data("CAR_results.ods")
     #####data["liuyc_{2}_{1}_test{0}".format(dir_name.split('_')[1:], param, set_param)] = final_CAR_list
-    data["liuyc_{0}_sensitivity_test".format(set_param)] = final_ods_list
+    #data["liuyc_{0}_sensitivity_test".format(set_param)] = final_ods_list
+    data["{1}_{0}_sensitivity_test".format(set_param, dir_name)] = final_ods_list
     print("Saving param {0} to ods file.".format(set_param))
     save_data("CAR_results.ods", data)
     print("Done saving to ods file.")
     print("The whole process takes {0:.2f} seconds.".format(time.time()-time_start))
-
+    print("prius0 yielded {0} times; passed {1} times.".format(yield_count_0, pass_count_0))

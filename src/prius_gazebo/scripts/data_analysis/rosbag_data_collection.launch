@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="dir_name" default="20190612_param_std/" />
+    <arg name="dir_name" default="20190523" />
     <arg name="rosbag_name" />
 
 <!-- Write data into txt -->
@@ -13,6 +13,6 @@
 <!-- Play Rosbag -->
     <arg name="path" default="$(find prius_gazebo)/rosbag/" /> 
     <arg name="dir" default="$(arg dir_name)" /> 
-    <node pkg="rosbag" type="play" name="player" args="$(arg path)$(arg dir_name)$(arg rosbag_name).bag" />
+    <node pkg="rosbag" type="play" name="player" args="$(arg path)$(arg dir_name)/$(arg rosbag_name).bag" />
 
 </launch>

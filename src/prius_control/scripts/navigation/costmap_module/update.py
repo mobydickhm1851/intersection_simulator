@@ -478,7 +478,7 @@ def CDF(ttc):
 
     TTA_act = TTA_est * slope   # mean of the PDF
 
-    std = STD   # standard deviation of the PDF
+    std = TTA_est * STD   # standard deviation of the PDF
 
     cdf = norm(TTA_act, std).cdf(ttc)
     
