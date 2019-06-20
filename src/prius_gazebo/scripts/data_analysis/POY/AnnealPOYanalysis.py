@@ -89,46 +89,6 @@ class DataAnalysis:
         self.dir_xy = [0,0]   
 
 
-    ###-------------------------------###
-    ###---Time to Action Estimation---###
-    ###-------------------------------###
-    def CDF(self, TTC, v_car):
-
-        #--- Get the estimated TTA ---#
-        R_I = 0.0
-        if self.A_DEC == 0: pass
-        else: R_I = v_car**2 / (2 * self.A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car
-        TTA_act = TTA_est * self.SLOPE   # mean of the PDF
-        std = TTA_est * self.STD    # standard deviation of the PDF
-        cdf = norm(TTA_act, std).cdf(TTC)
-        
-        return cdf
-    
-
-    ###----------------------------------- ###
-    ###------Probability of Stopping------ ###
-    ###----------------------------------- ###
-    def POS(self, min_TTC, TTC, TTC_p, time, time_p, v_car):
-        
-        #--- Variables ---#
-        TTC_dif = (TTC - TTC_p) / (time - time_p)
-
-        #--- GAMMA ---#
-        if (TTC_dif + 1) < 0:
-            self.GAMMA = 0
-        else:
-            self.GAMMA = (TTC_dif + 1) * self.ALPHA
-
-        #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(min_TTC, v_car)
-        judge_p_stop = (1 - cdf_0) * self.GAMMA
-        if judge_p_stop > 1 :
-            p_stop = 1
-        else:
-            p_stop = judge_p_stop
-
-        return p_stop
 
 
     # average every n element in the list
@@ -215,64 +175,13 @@ class DataAnalysis:
         self.car_t2n_list = list(abs(np.array(self.car_pose_list)/np.array(self.car_vel_list))) 
 
 
-    def get_POS_list(self):
-    # Probability of Stopping (yielding)
-        self.car_POS_list = []
-        self.car_POS_t_list = []
-
-        # append time (x value) in this loop, or x and y might not match
-        if len(self.car_t2n_list) > 2:
-            for i in range(len(self.car_t2n_list)-1):
-                self.car_POS_list.append(self.POS(min(self.car_t2n_list[:i+1]), self.car_t2n_list[i+1], self.car_t2n_list[i], self.car_t_list[i+1], self.car_t_list[i], self.car_vel_list[i+1]))
-                self.car_POS_t_list.append(self.car_t_list[i+1])
 
 
 
     # every_num=n : average every n data
-    def CAR_yield_analysis(self):
-#### COUNTING CAR ####
-    # Turn time into t-minus (copy one, avoide changing on the original list )
-        # copy the list (list.copy() available in 3.3)
-        '''
-        time_line = self.car_POS_t_list[:]
-        t_minus = time_line[::-1]   # reverse the list
-        t_minus = list(np.array(t_minus) - t_minus[0])
-        '''
-        POS_list = self.car_POS_list[:]
-        POS_list = POS_list[::-1]
-        current_list = [] 
-        for i in range(len(POS_list)):
-            if POS_list[i] >= self.POS_YIELD_THRESH:
-                current_list.append(1)
-            else:
-                current_list.append(0)
-
-        self.ods_sub_data.append(current_list)  
 
 
-    # every_num=n : average every n data
-    def CAR_pass_analysis(self):
-#### COUNTING CAR ####
-    # Turn time into t-minus (copy one, avoide changing on the original list )
-        # copy the list (list.copy() available in 3.3)
-        '''
-        time_line = self.car_POS_t_list[:]
-        t_minus = time_line[::-1]   # reverse the list
-        t_minus = list(np.array(t_minus) - t_minus[0])
-        '''
-        POS_list = self.car_POS_list[:]
-        POS_list = POS_list[::-1]
-        current_list = [] 
-        for i in range(len(POS_list)):
-            if POS_list[i] <= self.POS_PASS_THRESH:
-                current_list.append(1)
-            else:
-                current_list.append(0)
-
-        self.ods_sub_data.append(current_list)  
-
-
-    def get_final_pose(self, path):
+    def get_final_pose(self, path, every_num =1):
 
         temp_d2n = 0
 
@@ -282,7 +191,7 @@ class DataAnalysis:
         # Update the arrays
             self.update_arrays(raw_list)
         # Get the final lists (x or y)
-            self.get_final_list()
+            self.get_final_list(every_num)
         # Get the last distance
             temp_d2n = abs(self.car_pose_list[-1])
 

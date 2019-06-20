@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -102,17 +103,24 @@ if __name__ == '__main__':
             FILE_NUM = int(len(glob.glob(the_path))/2 )
 
             for i in range(FILE_NUM):   
-                print("Processing {0}_{1} using {2}={3}.....".format(names, i+1, set_param, param))
+                print("\rProcessing {0}_{1} using {2}={3}.....".format(names, i+1, set_param, param), file=sys.stderr, end='')
+                sys.stderr.flush()
 ##SETING04##
                 real_path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/'.format(dir_name)
+
             # prius0 
-                prius0 = DataAnalysis(param_dict_0)
+                prius0 = DataAnalysis()
+                prius0.set_params(param_dict_0)
                 path0 = real_path + names +"_"+"{0}".format(i+1)+"_"+"prius0"
                 prius0_temp_d2n = prius0.get_final_pose(path0)
+                prius0.get_POS_list()
+
             # prius1    
-                prius1 = DataAnalysis(param_dict_1)
+                prius1 = DataAnalysis()
+                prius1.set_params(param_dict_1)
                 path1 = real_path + names +"_"+"{0}".format(i+1)+"_"+"prius1"
                 prius1_temp_d2n = prius1.get_final_pose(path1)
+                prius1.get_POS_list()
 
                 if set_param == "threshold":
                     prius0.POS_YIELD_THRESH=param
@@ -125,39 +133,41 @@ if __name__ == '__main__':
                     prius0_file_name = path0.split('/')[-1]
 
                     if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
-                        prius0.CAR_yield_analysis(prius0_file_name)
+                        prius0.CAR_yield_analysis()
                         yield_count += 1
 
                     elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
-                        prius0.CAR_pass_analysis(prius0_file_name)
+                        prius0.CAR_pass_analysis()
                         pass_count += 1
 
                     final_CAR_list.append(prius0.ods_sub_data[0])
-                    print("{0}_{1} CAR analysis done.\n".format(names, i+1))
+                    print("\r{0}_{1} using {2}={3}. Done !!!!!!!".format(names, i+1, set_param, param), file=sys.stderr, end='')
+                    sys.stderr.flush()
 
                 elif second_name == driver_name:
 
                     prius1_file_name = path1.split('/')[-1]
 
                     if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
-                        prius1.CAR_pass_analysis(prius1_file_name)
+                        prius1.CAR_pass_analysis()
                         yield_count += 1
 
                     elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
-                        prius1.CAR_yield_analysis(prius1_file_name)
+                        prius1.CAR_yield_analysis()
                         pass_count += 1
 
                     final_CAR_list.append(prius1.ods_sub_data[0])
-                    print("{0}_{1} CAR analysis done.\n".format(names, i+1))
+                    print("\r{0}_{1} using {2}={3}. Done !!!!!!!".format(names, i+1, set_param, param), file=sys.stderr, end='')
+                    sys.stderr.flush()
 
 
         # Add the sumation of final_CAR_list into itself
             # copy the list (list.copy() available in 3.3)
+            print()
             print("Adding {0}'s {1} CAR results together.".format(driver_name,FILE_NUM))
             dummy_CAR_list = final_CAR_list[:]
             summed_CAR_list = []
             for i in dummy_CAR_list:
-                i = i[1:]    # remove the name tag
                 summed_CAR_list = map(sum,itertools.izip_longest(summed_CAR_list, i, fillvalue = 0))   # list has different length
             summed_CAR_list = list(np.array(summed_CAR_list) /float(FILE_NUM))
             summed_CAR_list = [float(j) for j in summed_CAR_list]
