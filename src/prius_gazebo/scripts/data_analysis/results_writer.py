@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 
 ##SETING02##
-    param_dict_0 = {'ALPHA':0.3, 'SLOPE':0.81, 'STD':0.101, 'A_DEC':3.076,'R_MIN':7.73, 'TAU':0.6}   # LiuYC's params
+    param_dict_0 = {'ALPHA':0.3, 'SLOPE':0.777, 'STD':0.08, 'A_DEC':4.475,'R_MIN':7.547, 'TAU':0.6}   # LiuYC's params
     #param_dict_1 = {'ALPHA':.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}
 
 # Loop for different params (sensitivity test)

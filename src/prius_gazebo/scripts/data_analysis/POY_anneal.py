@@ -25,34 +25,30 @@ POS_YIELD_THRESH = 0.8
 POS_PASS_THRESH = 0.5
 
 
+###---- Using 1-D Arrays as input ---- ###
 def CAR_yield_analysis(car_POS_list):
 #### COUNTING CAR ####
 # Turn time into t-minus (copy one, avoide changing on the original list )
     # copy the list (list.copy() available in 3.3)
     POS_list = car_POS_list[:]
     POS_list = POS_list[::-1]
-    current_list = [] 
-    for i in range(len(POS_list)):
-        if POS_list[i] >= POS_YIELD_THRESH:
-            current_list.append(1)
-        else:
-            current_list.append(0)
+    current_list = np.array([])
+
+    current_list = (POS_list >= POS_YIELD_THRESH).astype(int)
 
     return current_list
 
 
+###---- Using 1-D Arrays as input ---- ###
 def CAR_pass_analysis(car_POS_list):
 #### COUNTING CAR ####
 # Turn time into t-minus (copy one, avoide changing on the original list )
     # copy the list (list.copy() available in 3.3)
     POS_list = car_POS_list[:]
     POS_list = POS_list[::-1]
-    current_list = [] 
-    for i in range(len(POS_list)):
-        if POS_list[i] <= POS_PASS_THRESH:
-            current_list.append(1)
-        else:
-            current_list.append(0)
+    current_list = np.array([])
+
+    current_list = (POS_list <= POS_PASS_THRESH).astype(int)
 
     return current_list
 
@@ -68,9 +64,8 @@ class POYOptimizer(Annealer):
 
     ###-------------------------------###
     ###---Time to Action Estimation---###
-    ###-------------------------------###
+    ###- Using 1-D Arrays as input -- ###
     def CDF(self, TTC, v_car):
-        ALPHA = self.state[0]
         SLOPE = self.state[1]
         STD = self.state[2]
         A_DEC = self.state[3]
@@ -89,26 +84,31 @@ class POYOptimizer(Annealer):
 
     ###----------------------------------- ###
     ###------Probability of Stopping------ ###
-    ###----------------------------------- ###
-    def POS(self, min_TTC, TTC, TTC_p, time, time_p, v_car):
+    ###---- Using 1-D Arrays as input ---- ###
+    def POS(self, MIN_TTC, TTC, TTC_p, time, time_p, v_car):
         ALPHA = self.state[0]
+        GAMMA = np.array([])
+        p_stop = np.array([])
 
         #--- Variables ---#
         TTC_dif = (TTC - TTC_p) / (time - time_p)
 
         #--- GAMMA ---#
-        if (TTC_dif + 1) < 0:
-            GAMMA = 0
-        else:
-            GAMMA = (TTC_dif + 1) * ALPHA
+        for ttc_dif in TTC_dif: 
+            if (ttc_dif + 1) < 0:
+                GAMMA = np.append(GAMMA, 0, )
+            else:
+                GAMMA = np.append(GAMMA, (ttc_dif + 1) * ALPHA, )
 
         #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(min_TTC, v_car)
+        cdf_0 = self.CDF(MIN_TTC, v_car)
         judge_p_stop = (1 - cdf_0) * GAMMA
-        if judge_p_stop > 1 :
-            p_stop = 1
-        else:
-            p_stop = judge_p_stop
+        
+        for jps in judge_p_stop: 
+            if jps > 1 :
+                p_stop = np.append(p_stop, 1,)
+            else:
+                p_stop = np.append(p_stop, jps,)
 
         return p_stop
 
@@ -117,7 +117,7 @@ class POYOptimizer(Annealer):
 
     # Open each file and save them as array
 
-        dir_name = "liuyc_0"
+        dir_name = "lukc"
         driver_name = "lukc"
 
         path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0*'.format(dir_name, driver_name)
@@ -189,13 +189,13 @@ class POYOptimizer(Annealer):
                     
                     #final_CAR_list.append(prius0.ods_sub_data[0])
 
-
+    # input should bei 1-D ARRAYs !!! #
     def get_POS_list(self, car_t_list=None, car_vel_list=None, car_t2n_list=None):
     # Probability of Stopping (yielding)
-        car_POS_list = []
+        car_POS_list = np.array([])
         # append time (x value) in this loop, or x and y might not match
-        for i in range(len(car_t2n_list)-1):
-            car_POS_list.append(self.POS(min(car_t2n_list[:i+1]), car_t2n_list[i+1], car_t2n_list[i], car_t_list[i+1], car_t_list[i], car_vel_list[i+1]))
+
+        car_POS_list = self.POS( min(car_t2n_list[1:]), car_t2n_list[1:], car_t2n_list[:-1], car_t_list[1:], car_t_list[:-1], car_vel_list[1:])
          
         return car_POS_list
 
@@ -204,56 +204,85 @@ class POYOptimizer(Annealer):
         self.state = {'ALPHA':0.0, 'SLOPE':0.0, 'STD':0.0, 'A_DEC':0.0,'R_MIN':0.0, 'TAU':0.6}
 
         #arange(upper, lower, step)
-        ALPHA_list = np.arange(0.1, 2.3, 0.2)  
-        SLOPE_list = np.arange(0.1, 2.3, 0.2)  
-        STD_list = np.arange(0.01, 0.23, 0.02) 
-        A_DEC_list = np.arange(1.0, 8.7, 0.7)  
-        R_MIN_list = np.arange(5.0, 16, 1.0)   
-        #TAU_list = np.arange(0.1, 1.2, 0.1)    
-        #thresh_list = np.arange(0.1, 1.2, 0.1)    
-
-        r1 = random.randint(0 , len(ALPHA_list) - 1)
-        r2 = random.randint(0 , len(SLOPE_list) - 1)
-        r3 = random.randint(0 , len(STD_list) - 1)
-        r4 = random.randint(0 , len(A_DEC_list) - 1)
-        r5 = random.randint(0 , len(R_MIN_list) - 1)
-        #r6 = random.randint(0 , len(TAU_list) - 1)
-        #r7 = random.randint(0 , len(thresh_list) - 1)
+        ALPHA = [0.01, 3.0] 
+        SLOPE = [0.01, 3.0] 
+        STD   = [0.01, 0.5] 
+        A_DEC = [0.01, 10.0] 
+        R_MIN = [0.01, 10.0 ]
+        #TAU = np.arange(0.1, 1.2, 0.1)    
+        #thresh = np.arange(0.1, 1.2, 0.1)    
         
-        self.state = [ALPHA_list[r1], SLOPE_list[r2], STD_list[r3], A_DEC_list[r4], R_MIN_list[r5]]
+        ''' semi-continuous random 
+        '''
+        r1 = random.uniform(ALPHA[0], ALPHA[1])
+        r2 = random.uniform(SLOPE[0], SLOPE[1])
+        r3 = random.uniform(STD[0], STD[1])
+        r4 = random.uniform(A_DEC[0], A_DEC[1])
+        r5 = random.uniform(R_MIN[0], R_MIN[1])
+        #r6 = random.uniform(TAU[0], TAU[1])
+        #r7 = random.uniform(thresh[0], thresh[1])
+        
+        ''' discrete random 
+        r1_list = np.arange(ALPHA[0], ALPHA[1], 0.2)
+        r2_list = np.arange(SLOPE[0], SLOPE[1], 0.2)
+        r3_list = np.arange(STD[0], STD[1], 0.02)
+        r4_list = np.arange(A_DEC[0], A_DEC[1], 0.2)
+        r5_list = np.arange(R_MIN[0], R_MIN[1], 0.2)
+        #r6_list = np.arange(TAU[0], TAU[1], 0.1)
+        #r7_list = np.arange(thresh[0], thresh[1], 0.1)
+        r1 = random.choice(r1_list)
+        r2 = random.choice(r2_list)
+        r3 = random.choice(r3_list)
+        r4 = random.choice(r4_list)
+        r5 = random.choice(r5_list)
+        #r6 = random.choice(r6_list)
+        #r7 = random.choice(r7_list)
+        '''
+
+        self.state = [r1, r2, r3, r4, r5]
 
 
     def energy(self):
 
         CARarea = 0.0
         final_CAR_list = []
+        summed_CAR_list = []
 
     # States(parameters) are updated every time self.POS is called
 
-    # PASS cases
+    # PAupdatesSS cases
         for key in self.pass_dict:
-            pass_POS_list = self.get_POS_list(self.pass_dict[key][0], self.pass_dict[key][1], self.pass_dict[key][2])
-            final_CAR_list.append(CAR_pass_analysis(pass_POS_list))
+            pass_POS_list = self.get_POS_list( np.array(self.pass_dict[key][0]), np.array(self.pass_dict[key][1]), np.array(self.pass_dict[key][2]) )
+            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_pass_analysis(pass_POS_list), fillvalue=0) )
+            #final_CAR_list.append(CAR_pass_analysis(pass_POS_list))
     # YIELD cases
         for key in self.yield_dict:
-            yield_POS_list = self.get_POS_list(self.yield_dict[key][0], self.yield_dict[key][1], self.yield_dict[key][2])
-            final_CAR_list.append(CAR_yield_analysis(yield_POS_list))
+            yield_POS_list = self.get_POS_list( np.array(self.yield_dict[key][0]), np.array(self.yield_dict[key][1]), np.array(self.yield_dict[key][2]) )
+            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_yield_analysis(yield_POS_list), fillvalue=0) )
+            #final_CAR_list.append(CAR_yield_analysis(yield_POS_list))
 
+        ''' Deprecated, might be useful when debugging
         # Add the sumation of final_CAR_list into itself
             # copy the list (list.copy() available in 3.3)
         dummy_CAR_list = final_CAR_list[:]
-        summed_CAR_list = []
         for i in dummy_CAR_list:
             summed_CAR_list = map(sum,itertools.izip_longest(summed_CAR_list, i, fillvalue = 0))   # list has different length
+        '''
 
     # Final calculation for area
-        summed_CAR_list = list(np.array(summed_CAR_list) /float(self.total_file_num))
-        #summed_CAR_list = [float(j) for j in summed_CAR_list]
+        summed_CAR_list = np.array(summed_CAR_list) / float(self.total_file_num)
+
+        '''Weighting for T-minus from 0 to 2 secs 
+        '''
+        LEN = len(summed_CAR_list)
+        WEIGHT = 1.2   # weight value 
+        PENALTY = 0.8   # penalty value 
+        weight_arr = np.append(np.ones([200])*WEIGHT, np.ones(LEN-200)*PENALTY,)
+        summed_CAR_list = weight_arr*summed_CAR_list
+
         CARarea = sum(summed_CAR_list)
 
-        '''No weighting to different T-minus yet
-        '''
-        ''' SimAnnealing is for minimum, we are looking got mazimum hence the '-'
+        ''' SimAnnealing is for minimum, mazimum with negative sign
         '''
         return -CARarea
 
@@ -264,20 +293,28 @@ if __name__ == '__main__':
 
     poyop = POYOptimizer(init_state)
     poyop.steps = 1000
+    # Optimized Tmax, Tmin:steps:260.0, tmax:110.0, tmin:0.073, updates: 100
+    poyop.Tmax = 120
+    poyop.Tmin = 0.05 
     # since our state is just a list, slice is the fastest way to copy
     poyop.copy_strategy = "slice"
 
 # Data Collection (to read txt only once)
     poyop.SaveTxtData()
     state, e = poyop.anneal()
-
-
     print()
     print(" Final area under CAR curve : {0}\n".format(e) )
     param_name = ['ALPHA', 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
     for i in range(len(state)):
-        print("    {0} : {1}\t".format(param_name[i], state[i]))
+        print(" {0} : {1}\t".format(param_name[i], state[i]))
 
+
+    '''
+    schedule = poyop.auto(10, 10000)
+    print(schedule)
+    '''
+
+    '''
     print()
 
     init_t = time.time()
@@ -288,8 +325,6 @@ if __name__ == '__main__':
         current_t = time.time()
 
 
-
-    '''
 
         print("\rTrial No.{2}:result from list spent {1:.4f} secs,Total spent time={0:.4f}".format(time.time()-init_t, time.time()-current_t, count), file=sys.stderr, end='' )
         sys.stderr.flush()

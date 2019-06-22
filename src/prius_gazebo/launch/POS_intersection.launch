@@ -26,7 +26,7 @@
   <!-- joy stick teleop (1 or 2 cars) -->
   <include file="$(find prius_gazebo)/launch/includes/teleop_joy.xml"  if="$(arg teleop_joy)" >
     <arg name="single" value="$(arg single)" />
-    <arg name="joy_maxVel" value="20" />
+    <arg name="joy_maxVel" value="5" />
     <arg name="joy_accele" value="0.035"/>
   </include>
   
@@ -68,8 +68,8 @@
 
 
   <!-- =============  rosbag  ============== -->
-  <arg name="path" default="$(find prius_gazebo)/rosbag/20190523/" />
-  <arg name="session" default="lukc_paul_free.bag" />
+  <arg name="path" default="$(find prius_gazebo)/rosbag/param_test/" />
+ <arg name="session" default="liuyc_96.bag" />
   <arg name="topic1" default="/prius0/base_pose_ground_truth"/>
   <arg name="topic2" default="/prius1/base_pose_ground_truth"/>
   <arg name="topic3" default="/prius0/cmd_vel"/>

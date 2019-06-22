@@ -324,7 +324,7 @@ if __name__ == '__main__':
 
     dir_name = "param_test"
     driver_name = "lukc"
-    N = 20    # How many 
+    N = 50    # How many 
 
     path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}*'.format(dir_name, driver_name)
     files = glob.glob(path)
@@ -496,9 +496,9 @@ if __name__ == '__main__':
     v_TTA_list.append(float(sigma_v_TTA))
 
 
-    final_param_list = [trial_num_list]+[A_DEC_list]+[R_MIN_list]+[riA_DEC_list]+[riR_MIN_list]+[R_I_list]+[tuned_SLOPE_list]+[TTA_list]+[v_TTA_list]
+    final_param_list = [trial_num_list]+[tuned_SLOPE_list]+[riA_DEC_list]+[R_MIN_list]+[TTA_list]+[v_TTA_list]+[A_DEC_list]+[riR_MIN_list]+[R_I_list]
 
     data = get_data("param_results.ods")
-    data["{0}_param_{1}".format(driver_name, 8)] = final_param_list
+    data["{0}_param_{1}".format(driver_name, 9)] = final_param_list
     save_data("param_results.ods", data)
     
