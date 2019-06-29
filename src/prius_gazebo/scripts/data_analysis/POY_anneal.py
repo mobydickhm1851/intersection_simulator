@@ -61,22 +61,87 @@ class POYOptimizer(Annealer):
         self.pass_dict = {}
         self.yield_dict = {}
         self.total_file_num = 0
+        self.summed_list = []
 
     ###-------------------------------###
     ###---Time to Action Estimation---###
-    ###- Using 1-D Arrays as input -- ###
-    def CDF(self, TTC, v_car):
-        SLOPE = self.state[1]
-        STD = self.state[2]
-        A_DEC = self.state[3]
-        R_MIN = self.state[4]
+    ###-------------------------------###
+    def CDF(self, min_TTC, v_car, TTC_dif, TTC):
+
+        SLOPE = self.state[0]
+        STD = self.state[1]
+        A_DEC = self.state[2]
+        R_MIN = self.state[3]
+        ALPHA = np.array([])
         #--- Get the estimated TTA ---#
+        '''
+        if (TTC_dif + 1) >= 0 : ALPHA = math.log(TTC_dif+1+math.exp(1), math.exp(1))
+        else : ALPHA = -999999   # -inf
+        '''
+
         R_I = 0.0
         if A_DEC == 0: pass
         else: R_I = v_car**2 / (2 * A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car
-        TTA_act = TTA_est * SLOPE   # mean of the PDF
+        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
         std = TTA_est * STD    # standard deviation of the PDF
+
+        ALPHA =  abs(TTC - TTA_est) * np.log(TTC_dif+1+np.exp(1)) 
+        #ALPHA = ( STD * 1.96 + abs(TTC - TTA_est) * (TTC_dif + 1) )
+        for i in range(len(TTC_dif)):
+            if (TTC_dif[i] + 1) < 1 : ALPHA[i] = -999999
+
+        TTA_act = TTA_est + ALPHA   # mean of the PDF
+        cdf = norm(TTA_act, std).cdf(min_TTC)
+        
+        #print("[v_car={4:.2f}] cdf = {0:.2f}, min_TTC = {1:.2f}, TTA_est = {2:.2f}, TTC_dif = {3:.2f}".format(cdf, min_TTC, TTA_est, TTC_dif, v_car))
+        return cdf
+    
+
+    ###----------------------------------- ###
+    ###------Probability of Stopping------ ###
+    ###----------------------------------- ###
+    def POS(self, min_TTC, TTC, TTC_p, time, time_p, v_car):
+        
+        #--- Variables ---#
+        TTC_dif = (TTC - TTC_p) / (time - time_p)
+        
+        '''
+        #--- GAMMA ---#
+        if (TTC_dif + 1) < 0:
+            self.GAMMA = 0
+        else:
+            self.GAMMA = (TTC_dif + 1) * self.ALPHA
+        '''
+
+        #--- Probability of Stopping ---#
+        cdf_0 = self.CDF(min_TTC, v_car, TTC_dif, TTC)
+        judge_p_stop = (1 - cdf_0)
+
+        return judge_p_stop
+
+
+    '''
+    ###-------------------------------###
+    ###---Time to Action Estimation---###
+    ###- Using 1-D Arrays as input -- ###
+    def CDF(self, TTC, v_car, TTC_dif):
+        SLOPE = self.state[0]
+        STD = self.state[1]
+        A_DEC = self.state[2]
+        R_MIN = self.state[3]
+        ALPHA = np.array([])
+        #--- Get the estimated TTA ---#
+        R_I = 0.0
+        for ttc_dif in TTC_dif: 
+            if (ttc_dif + 1) >= 0 : ALPHA = np.append(ALPHA, math.log(ttc_dif + 1 + 4, 4), )
+            else : ALPHA = np.append(ALPHA, -999999, )   # -inf
+        
+        if A_DEC == 0: pass
+        else: R_I = v_car**2 / (2 * A_DEC)
+        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
+        std = TTA_est * STD    # standard deviation of the PDF
+
+        TTA_act = TTA_est * ALPHA   # mean of the PDF
         cdf = norm(TTA_act, std).cdf(TTC)
         
         return cdf
@@ -86,23 +151,15 @@ class POYOptimizer(Annealer):
     ###------Probability of Stopping------ ###
     ###---- Using 1-D Arrays as input ---- ###
     def POS(self, MIN_TTC, TTC, TTC_p, time, time_p, v_car):
-        ALPHA = self.state[0]
-        GAMMA = np.array([])
+        #ALPHA = self.state[0]
         p_stop = np.array([])
 
         #--- Variables ---#
         TTC_dif = (TTC - TTC_p) / (time - time_p)
 
-        #--- GAMMA ---#
-        for ttc_dif in TTC_dif: 
-            if (ttc_dif + 1) < 0:
-                GAMMA = np.append(GAMMA, 0, )
-            else:
-                GAMMA = np.append(GAMMA, (ttc_dif + 1) * ALPHA, )
-
         #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(MIN_TTC, v_car)
-        judge_p_stop = (1 - cdf_0) * GAMMA
+        cdf_0 = self.CDF(MIN_TTC, v_car, TTC_dif)
+        judge_p_stop = (1 - cdf_0)
         
         for jps in judge_p_stop: 
             if jps > 1 :
@@ -111,17 +168,17 @@ class POYOptimizer(Annealer):
                 p_stop = np.append(p_stop, jps,)
 
         return p_stop
-
+    '''
 
     def SaveTxtData(self):
 
     # Open each file and save them as array
 
-        dir_name = "lukc"
-        driver_name = "lukc"
+        dir_name = "liuyc"
+        self.driver_name = "liuyc"
 
-        path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0*'.format(dir_name, driver_name)
-        path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius1*'.format(dir_name, driver_name)
+        path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0*'.format(dir_name, self.driver_name)
+        path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius1*'.format(dir_name, self.driver_name)
 
         files = glob.glob(path0) + glob.glob(path1)
 
@@ -175,13 +232,13 @@ class POYOptimizer(Annealer):
                 # every_num=n : average every n data
                 prius1_temp_d2n = prius1.get_final_pose(path1, 1)
 
-                if first_name == driver_name : 
+                if first_name == self.driver_name : 
                     if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
                         self.yield_dict['{0}'.format(file_name0)] = [prius0.car_t_list, prius0.car_vel_list, prius0.car_t2n_list]
                     elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
                         self.pass_dict['{0}'.format(file_name0)] = [prius0.car_t_list, prius0.car_vel_list, prius0.car_t2n_list]
 
-                elif second_name == driver_name : 
+                elif second_name == self.driver_name : 
                     if abs(prius0_temp_d2n) > abs(prius1_temp_d2n):
                         self.pass_dict['{0}'.format(file_name1)] = [prius1.car_t_list, prius1.car_vel_list, prius1.car_t2n_list]
                     elif abs(prius0_temp_d2n) < abs(prius1_temp_d2n):
@@ -201,20 +258,20 @@ class POYOptimizer(Annealer):
 
 
     def move(self):
-        self.state = {'ALPHA':0.0, 'SLOPE':0.0, 'STD':0.0, 'A_DEC':0.0,'R_MIN':0.0, 'TAU':0.6}
+        #self.state = {'ALPHA':0.0, 'SLOPE':0.0, 'STD':0.0, 'A_DEC':0.0,'R_MIN':0.0, 'TAU':0.6}
 
         #arange(upper, lower, step)
-        ALPHA = [0.01, 3.0] 
-        SLOPE = [0.01, 3.0] 
+        #ALPHA = [0.01, 3.0] 
+        SLOPE = [0.01, 1.0] 
         STD   = [0.01, 0.5] 
-        A_DEC = [0.01, 10.0] 
-        R_MIN = [0.01, 10.0 ]
+        A_DEC = [1.0, 8.0] 
+        R_MIN = [0.01, 15.0 ]
         #TAU = np.arange(0.1, 1.2, 0.1)    
         #thresh = np.arange(0.1, 1.2, 0.1)    
         
         ''' semi-continuous random 
         '''
-        r1 = random.uniform(ALPHA[0], ALPHA[1])
+        #r1 = random.uniform(ALPHA[0], ALPHA[1])
         r2 = random.uniform(SLOPE[0], SLOPE[1])
         r3 = random.uniform(STD[0], STD[1])
         r4 = random.uniform(A_DEC[0], A_DEC[1])
@@ -223,14 +280,14 @@ class POYOptimizer(Annealer):
         #r7 = random.uniform(thresh[0], thresh[1])
         
         ''' discrete random 
-        r1_list = np.arange(ALPHA[0], ALPHA[1], 0.2)
+        #r1_list = np.arange(ALPHA[0], ALPHA[1], 0.2)
         r2_list = np.arange(SLOPE[0], SLOPE[1], 0.2)
         r3_list = np.arange(STD[0], STD[1], 0.02)
         r4_list = np.arange(A_DEC[0], A_DEC[1], 0.2)
         r5_list = np.arange(R_MIN[0], R_MIN[1], 0.2)
         #r6_list = np.arange(TAU[0], TAU[1], 0.1)
         #r7_list = np.arange(thresh[0], thresh[1], 0.1)
-        r1 = random.choice(r1_list)
+        #r1 = random.choice(r1_list)
         r2 = random.choice(r2_list)
         r3 = random.choice(r3_list)
         r4 = random.choice(r4_list)
@@ -239,7 +296,8 @@ class POYOptimizer(Annealer):
         #r7 = random.choice(r7_list)
         '''
 
-        self.state = [r1, r2, r3, r4, r5]
+        #self.state = [0.01, r2, r3, r4, r5]
+        self.state = [r2, r3, r4, r5]
 
 
     def energy(self):
@@ -271,14 +329,15 @@ class POYOptimizer(Annealer):
 
     # Final calculation for area
         summed_CAR_list = np.array(summed_CAR_list) / float(self.total_file_num)
+        self.summed_list = summed_CAR_list
 
         '''Weighting for T-minus from 0 to 2 secs 
-        '''
         LEN = len(summed_CAR_list)
-        WEIGHT = 1.2   # weight value 
-        PENALTY = 0.8   # penalty value 
+        WEIGHT = 1.0   # weight value 
+        PENALTY = 1.0   # penalty value 
         weight_arr = np.append(np.ones([200])*WEIGHT, np.ones(LEN-200)*PENALTY,)
         summed_CAR_list = weight_arr*summed_CAR_list
+        '''
 
         CARarea = sum(summed_CAR_list)
 
@@ -289,10 +348,11 @@ class POYOptimizer(Annealer):
 
 if __name__ == '__main__':
     # initial state, a randomly-ordered itinerary
-    init_state = [0.3, 0.81, 0.101, 3.076, 7.73]   # LiuYC's params
+    #init_state = [0.01, 0.3, 0.08, 8.5, 3.0]   # LiuYC's params
+    init_state = [0.3, 0.08, 8.5, 3.0]   # LiuYC's params
 
     poyop = POYOptimizer(init_state)
-    poyop.steps = 1000
+    poyop.steps = 3000
     # Optimized Tmax, Tmin:steps:260.0, tmax:110.0, tmin:0.073, updates: 100
     poyop.Tmax = 120
     poyop.Tmin = 0.05 
@@ -301,17 +361,40 @@ if __name__ == '__main__':
 
 # Data Collection (to read txt only once)
     poyop.SaveTxtData()
+
+
     state, e = poyop.anneal()
     print()
     print(" Final area under CAR curve : {0}\n".format(e) )
-    param_name = ['ALPHA', 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
+    #param_name = ['ALPHA', 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
+    param_name = [ 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
     for i in range(len(state)):
         print(" {0} : {1}\t".format(param_name[i], state[i]))
+    print("Tmax={0}, Tmin={1}, steps={2}".format(poyop.Tmax, poyop.Tmin, poyop.steps))
+    print("Saving Optimized data into ods file.")
+
+    param_list = [state[0], state[1] ,state[2], state[3]]
+
+    data = get_data("SAparam.ods")
+
+    if "{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps) in data:
+        dum_data = data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)]
+        for j in range(len(dum_data)):
+            dum_data[j].append(state[j])
+        data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)] = dum_data
+    else:
+        dum_data = []
+        for k in range(len(state)):
+            dum_data.append([param_name[k], param_list[k]])
+        data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)] = dum_data
+
+    save_data("SAparam.ods", data)
 
 
     '''
-    schedule = poyop.auto(10, 10000)
+    schedule = poyop.auto(10, 2000)
     print(schedule)
+
     '''
 
     '''

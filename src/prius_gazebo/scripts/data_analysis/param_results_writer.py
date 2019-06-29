@@ -17,7 +17,7 @@ from pyexcel_ods import get_data    # Dave data to .ods file for Calc
 
 class TxtData:
 
-    def __init__(self, ALPHA=.2, SLOPE=1.4285, A_DEC=2.35, R_MIN=6.3, TAU=0.6):
+    def __init__(self, ALPHA=2.1, SLOPE=1.4285, A_DEC=2.35, R_MIN=6.3, TAU=0.6):
 
     #--- POS, CDF Parameters ---#
         self.ALPHA = ALPHA

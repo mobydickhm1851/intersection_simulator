@@ -26,12 +26,22 @@ time_start = time.time()
 if __name__ == '__main__':
 
 ##SETING01##
-    dir_name = "lukc"
-    driver_name = "lukc"
+    
+    param_dict_0 = {'SLOPE':0.95837 , 'STD':0.011, 'A_DEC':1.433 ,'R_MIN':9.449, 'TAU':0.6}   # optimized params
+    #param_dict_0 = {'SLOPE':0.816 , 'STD':0.350, 'A_DEC':2.851 ,'R_MIN':7.277, 'TAU':0.6}   # Paul's params
+    #param_dict_0 = {'SLOPE':0.82 , 'STD':0.285, 'A_DEC':3.099 ,'R_MIN':8.581, 'TAU':0.6}   # LiuYC's params
+    #param_dict_0 = {'SLOPE':0.779 , 'STD':0.212, 'A_DEC':4.475 ,'R_MIN':7.547, 'TAU':0.6}   # LuKC's params
+    #param_dict_0 = {'SLOPE':0.8, 'STD':0.25, 'A_DEC':3.5 ,'R_MIN':7.0, 'TAU':0.6}   # average params
+    step = "addALPHA_optimized"
+    weight = "measures_0"
+    # SHEET name 
+    trial_num = "3"
 
-    path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0*'.format(dir_name, driver_name)
-    path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius1*'.format(dir_name, driver_name)
+    dir_name = "liuyc"
+    driver_name = "liuyc"
 
+    path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0'.format(dir_name, driver_name)
+    path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius1'.format(dir_name, driver_name)
     files = glob.glob(path0) + glob.glob(path1)
 
 # Checking files status
@@ -58,9 +68,6 @@ if __name__ == '__main__':
 
 
 ##SETING02##
-    param_dict_0 = {'ALPHA':2.21, 'SLOPE':2.41, 'STD':0.19, 'A_DEC':0.81,'R_MIN':9.61, 'TAU':0.6}   # Driver's params
-    #param_dict_1 = {'ALPHA':.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}
-    trial_num = 8
 
     yield_count = 0
     pass_count = 0
@@ -70,6 +77,7 @@ if __name__ == '__main__':
 # CAR classification
 
 
+    file_num_list = []
     for names in file_names_list:
 
         param_dict_1 = param_dict_0
@@ -77,6 +85,7 @@ if __name__ == '__main__':
         final_CAR_list = []
         the_path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}*'.format(dir_name, names)
         FILE_NUM = int(len(glob.glob(the_path))/2 )
+        file_num_list.append(FILE_NUM)
 
         for i in range(FILE_NUM):   
             print("\rProcessing {0}_{1}.....".format(names, i+1), file=sys.stderr, end='')
@@ -91,6 +100,8 @@ if __name__ == '__main__':
             prius0_temp_d2n = prius0.get_final_pose(path0)
             prius0.get_POS_list()
 
+            #print("prius0: {0}".format(prius0.car_POS_list))
+
         # prius1    
             prius1 = DataAnalysis()
             prius1.set_params(param_dict_1)
@@ -98,6 +109,7 @@ if __name__ == '__main__':
             prius1_temp_d2n = prius1.get_final_pose(path1)
             prius1.get_POS_list()
 
+            #print("prius1: {0}".format(prius1.car_POS_list))
 
             first_name = names.split("_")[0]
             second_name = names.split("_")[1]
@@ -142,23 +154,42 @@ if __name__ == '__main__':
         summed_CAR_list = []
         for i in dummy_CAR_list:
             summed_CAR_list = map(sum,itertools.izip_longest(summed_CAR_list, i, fillvalue = 0))   # list has different length
-        summed_CAR_list = list(np.array(summed_CAR_list) /float(FILE_NUM))
+        summed_CAR_list = list( np.array(summed_CAR_list)/float(FILE_NUM) )
         summed_CAR_list = [float(j) for j in summed_CAR_list]
-        summed_CAR_list.insert(0, "{6}({7})_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU'], driver_name, names))
+        #summed_CAR_list.insert(0, "{6}({7})_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU'], driver_name, names))
         #####final_CAR_list_0.append(summed_CAR_list_0)
 
         final_ods_list.append(summed_CAR_list)
         print("Done adding CAR results together.")
 
+    ave_list = []
+    for i in range(len(final_ods_list)):
+        ave_list = map(sum,itertools.izip_longest(ave_list, np.array(final_ods_list[i])*float(file_num_list[i]), fillvalue = 0))   # list has different length
+    ave_list = list(np.array(ave_list) /float(sum(file_num_list)))
+    ave_list = [float(j) for j in ave_list]
+    AREA = sum(ave_list)
+    ave_list.insert(0, "{5}({6}/{7:.2f})_{0}-{1}-{2}-{3}-{4}".format(param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU'], driver_name, step,AREA))
+    #ave_list.insert(0, "{6}({7}/{8})_{0}-{1}-{2}-{3}-{4}-{5}".format(param_dict_0['ALPHA'], param_dict_0['SLOPE'], param_dict_0['STD'], param_dict_0['A_DEC'], param_dict_0['R_MIN'], param_dict_0['TAU'], driver_name, step,weight))
+
+    final_ods_list.append(ave_list)
 
     print("Opening file CAR_results.ods .")
-    data = get_data("CAR_results.ods")
+    data = get_data("CAR_results_plot.ods")
     print("CAR_results.ods opened .")
-    data["{0}_optimumParam_test_{1}".format(driver_name, trial_num)] = final_ods_list
+    if "{0}_optimumParam_{1}".format(driver_name, trial_num) in data:
+        dum_data = data["{0}_optimumParam_{1}".format(driver_name, trial_num)]
+        dum_data.append(ave_list)
+        data["{0}_optimumParam_{1}".format(driver_name, trial_num)] = dum_data
+    else:
+        data["{0}_optimumParam_{1}".format(driver_name, trial_num)] = [ave_list]
+
 
     print("Saving param to ods file.")
-    save_data("CAR_results.ods", data)
+    save_data("CAR_results_plot.ods", data)
     print("Done saving to ods file.")
 
     print("The whole process takes {0:.2f} seconds.".format(time.time()-time_start))
     print("prius0 yielded {0} times; passed {1} times.".format(yield_count, pass_count))
+
+
+

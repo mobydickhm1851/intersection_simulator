@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="dir_name" default="20190523" />
+    <arg name="dir_name" default="20190628" />
     <arg name="rosbag_name" />
 
 <!-- Write data into txt -->

@@ -113,11 +113,12 @@ def rosbag_callback(pose, i):
 
 #--- Parameters ---#
 
-alpha = 0.3
-R_min = 3    # meter
+alpha = 1
+R_min = 7.745    # meter
 tau = 0.6    # s
-a_dec = 3.4    # m/s^2
-slope = 0.65   # y = 0.65x + 0.15
+a_dec = 4.475    # m/s^2
+slope = 0.778   # y = 0.65x + 0.15
+STD = 0.081
     
 
 ###-------------------------------###
@@ -132,9 +133,9 @@ def CDF(ttc,v_car):
 
     TTA_est = (R_i + v_car*tau + R_min ) / v_car
 
-    TTA_act = TTA_est / slope   # mean of the PDF
+    TTA_act = TTA_est * slope   # mean of the PDF
 
-    std = TTA_act * 0.375/2    # standard deviation of the PDF
+    std = TTA_act * STD    # standard deviation of the PDF
 
     cdf = norm(TTA_act, std).cdf(ttc)
     #print("TTA_act = {0} while std = {1}".format(TTA_act, std))

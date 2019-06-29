@@ -66,7 +66,7 @@ if __name__ == '__main__':
     '''
 
     path = "/home/liuyc/moby_folder/Research/figures/intersection_simulator/driver_param/"
-    plt.savefig(path+'{0}_{1}_fitting.pdf'.format(driver_name.upper(), param.upper()))
+    plt.savefig(path+'{0}_{1}_fitting.pdf'.format(driver_name.upper(), trial_num))
     plt.show()
 
 '''

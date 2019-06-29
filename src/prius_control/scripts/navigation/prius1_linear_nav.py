@@ -365,12 +365,12 @@ def main():
                         pos = update.POS()
                         if pos > 0.8:
 
-                            accelerate()
+                            accelerate(2)
 
                         ### TODO: checl there is an unavoidable collision 
                         else:
                             ### NOTE: +3 for the distance left afetr fully stopped  
-                            cross_dist = get_cross_dist(np.array([unit_lh_pose])) + 3  # in meters
+                            cross_dist = get_cross_dist(np.array([unit_lh_pose])) + 5  # in meters
 
                             time_impact = get_impact_time(np.array([unit_lh_pose]))  # in seconds
                         

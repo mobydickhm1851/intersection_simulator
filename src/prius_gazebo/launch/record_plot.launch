@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+    
+  <arg name="cmap_size_default" default="70" />
+  <arg name="cmap_res_default" default="0.5" />
+    
+
+    <!-- ==== costmap visualization ==== --> 
+  <node name="prius1_costmap_plot" type="prius1_costmap_plot.py" pkg="prius_control" >
+    <param name="robot_ns" value="prius1" />
+    <param name="cmap_size" type="double" value="$(arg cmap_size_default)" />
+    <param name="cmap_res" type="double" value="$(arg cmap_res_default)" />
+  </node>
+
+</launch>
+

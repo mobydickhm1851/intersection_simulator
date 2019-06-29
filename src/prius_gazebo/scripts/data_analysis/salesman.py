@@ -80,10 +80,9 @@ if __name__ == '__main__':
                 distance_matrix[ka][kb] = distance(va, vb)
 
     tsp = TravellingSalesmanProblem(init_state, distance_matrix)
-    tsp.steps = 1000000
+    tsp.steps = 100000
     # since our state is just a list, slice is the fastest way to copy
     tsp.copy_strategy = "slice"
-    '''
     state, e = tsp.anneal()
 
     while state[0] != 'New York City':
@@ -97,3 +96,4 @@ if __name__ == '__main__':
 
     schedule = tsp.auto(100,100000)
     print(schedule)
+    '''

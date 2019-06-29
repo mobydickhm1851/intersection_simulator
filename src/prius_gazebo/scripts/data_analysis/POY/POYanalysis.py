@@ -14,6 +14,7 @@ from pyexcel_ods import save_data    # Dave data to .ods file for Calc
 from pyexcel_ods import get_data    # Dave data to .ods file for Calc
 import itertools
 import time
+import math
 
 
 
@@ -59,7 +60,7 @@ class DataAnalysis:
     def set_params(self, param_dict={'ALPHA':0.2, 'SLOPE':0.744, 'STD':0.09857, 'A_DEC':2.44, 'R_MIN':6.4, 'TAU':0.6}):
 
     #--- POS, CDF Parameters ---#
-        self.ALPHA = param_dict['ALPHA']
+        #self.ALPHA = param_dict['ALPHA']
         self.SLOPE = param_dict['SLOPE']   
         self.STD = param_dict['STD']   
         self.A_DEC = param_dict['A_DEC']    # m/s^2
@@ -92,17 +93,27 @@ class DataAnalysis:
     ###-------------------------------###
     ###---Time to Action Estimation---###
     ###-------------------------------###
-    def CDF(self, TTC, v_car):
+    def CDF(self, min_TTC, v_car, TTC_dif, TTC):
 
         #--- Get the estimated TTA ---#
+        '''
+        if (TTC_dif + 1) >= 0 : ALPHA = math.log(TTC_dif+1+math.exp(1), math.exp(1))
+        else : ALPHA = -999999   # -inf
+        '''
+
         R_I = 0.0
         if self.A_DEC == 0: pass
         else: R_I = v_car**2 / (2 * self.A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car
-        TTA_act = TTA_est * self.SLOPE   # mean of the PDF
+        TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car * self.SLOPE
         std = TTA_est * self.STD    # standard deviation of the PDF
-        cdf = norm(TTA_act, std).cdf(TTC)
+
+        if (TTC_dif + 1) >= 0 : ALPHA = self.STD*1.96 + abs((TTC - TTA_est))*(TTC_dif+1)
+        else : ALPHA = -999999   # -inf
+
+        TTA_act = TTA_est + ALPHA   # mean of the PDF
+        cdf = norm(TTA_act, std).cdf(min_TTC)
         
+        #print("[v_car={4:.2f}] cdf = {0:.2f}, min_TTC = {1:.2f}, TTA_est = {2:.2f}, TTC_dif = {3:.2f}".format(cdf, min_TTC, TTA_est, TTC_dif, v_car))
         return cdf
     
 
@@ -113,21 +124,24 @@ class DataAnalysis:
         
         #--- Variables ---#
         TTC_dif = (TTC - TTC_p) / (time - time_p)
-
+        
+        '''
         #--- GAMMA ---#
         if (TTC_dif + 1) < 0:
             self.GAMMA = 0
         else:
             self.GAMMA = (TTC_dif + 1) * self.ALPHA
+        '''
 
         #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(min_TTC, v_car)
-        judge_p_stop = (1 - cdf_0) * self.GAMMA
+        cdf_0 = self.CDF(min_TTC, v_car, TTC_dif, TTC)
+        judge_p_stop = (1 - cdf_0)
         if judge_p_stop > 1 :
             p_stop = 1
         else:
             p_stop = judge_p_stop
 
+        #print("judge_p_stop = {0}".format(judge_p_stop))
         return p_stop
 
 

@@ -20,7 +20,7 @@ import time
 class DataAnalysis:
 
 # Analysis Parameters
-    VISIBLE_DIST = 12    # (m)
+    VISIBLE_DIST = 18    # (m)
     POS_YIELD_THRESH = 0.8
     POS_PASS_THRESH = 0.5
 
