@@ -46,14 +46,19 @@ if __name__ == '__main__':
     from POY_anneal import CAR_pass_analysis
     from POY_anneal import CAR_yield_analysis
     
-    state0 = [0.82, 0.285, 3.099, 8.581]  # measured param of LIUYC
-    state1 = [0.95837, 0.011, 1.433, 9.449]  # below are optimized
-    state2 = [0.9643, 0.0439, 2.57, 14.94]
-    state3 = [0.8568, 0.0114, 1.489, 12.446]
-    state4 = [0.889, 0.068, 1.5, 14.8]
-    state5 = [0.992, 0.011, 2.282, 11.89]
+     
+    #state0 = [0.779, 0.081, 4.475, 7.547]  # measured param of LUKC
+    state0 = [0.82, 0.09, 3.099, 8.581]  # measured param of LIUYC
+    state1 = [0.9637, 0.0159, 1.0406, 4.312]  # below are optimized
+    state2 = [0.974377, 0.0258, 1.44, 4.47]
+    state3 = [0.01, 0.055, 7.017, 4.78]
+    state4 = [0.9082, 0.242, 3.069, 10.786]
+    state5 = [0.9768, 0.3377, 7.2353, 14.989]
+    state6 = [0.775, 0.0109, 1.006, 5.594]
 
+    #states = [state0, state6]
     states = [state0, state1, state2, state3, state4, state5]
+    #states = [state0, state1, state2, state3, state4, state5, state6]
     
     fig1 = plt.figure(1, figsize=(14,7))
     ax1 = fig1.add_subplot(111)   # (211)2 figs in 1 plot
@@ -61,7 +66,7 @@ if __name__ == '__main__':
 
     ax1.clear()
     #ax2.clear()
-    ax1.set_xlim(0,5)
+    ax1.set_xlim(0,7)
 
     title = "Classification Accuracy Rate versus T-minus (LIUYC)"    
     ax1.set_title(title, fontsize=15)
@@ -70,11 +75,11 @@ if __name__ == '__main__':
 
     width = 10
     for st in states:
-        width /= 1.3
+        width /= 1.5
         test = POYOptimizer(st)
         test.SaveTxtData()
         e = test.energy()
-        label_name = "{0}-{1}-{2}-{3}".format(st[0],st[1],st[2],st[3])
+        label_name = "[{4:.2f}]{0}-{1}-{2}-{3}".format(st[0],st[1],st[2],st[3],e)
         t_minus = list(np.arange(0,0.01*(len(test.summed_list)),0.01))
         ax1.plot(t_minus, test.summed_list, label = label_name, linewidth = width, alpha=1)
         print(type(test.summed_list))

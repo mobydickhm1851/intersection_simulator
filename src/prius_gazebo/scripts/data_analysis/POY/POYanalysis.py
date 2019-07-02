@@ -21,7 +21,7 @@ import math
 class DataAnalysis:
 
 # Analysis Parameters
-    VISIBLE_DIST = 12    # (m)
+    VISIBLE_DIST = 18    # (m)
     POS_YIELD_THRESH = 0.8
     POS_PASS_THRESH = 0.5
 
@@ -107,13 +107,13 @@ class DataAnalysis:
         TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car * self.SLOPE
         std = TTA_est * self.STD    # standard deviation of the PDF
 
-        if (TTC_dif + 1) >= 0 : ALPHA = self.STD*1.96 + abs((TTC - TTA_est))*(TTC_dif+1)
-        else : ALPHA = -999999   # -inf
+        ALPHA = abs(std+ min_TTC - TTA_est)*np.log(abs(TTC_dif+1)*np.exp(1)+1) 
+        if (TTC_dif + 1) >= 0 : TTA_act = TTA_est + ALPHA  
+        else : TTA_act = TTA_est - ALPHA
 
-        TTA_act = TTA_est + ALPHA   # mean of the PDF
         cdf = norm(TTA_act, std).cdf(min_TTC)
         
-        #print("[v_car={4:.2f}] cdf = {0:.2f}, min_TTC = {1:.2f}, TTA_est = {2:.2f}, TTC_dif = {3:.2f}".format(cdf, min_TTC, TTA_est, TTC_dif, v_car))
+        print("[v_car={5:.2f}] cdf={0:.2f}, min_TTC={1:.2f}, TTA_est={2:.2f}, TTC={3:.2f}, TTC_dif={4:.2f}".format(cdf, min_TTC, TTA_est, TTC, TTC_dif, v_car))
         return cdf
     
 

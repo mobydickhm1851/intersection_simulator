@@ -27,9 +27,9 @@ if __name__ == '__main__':
 
 ##SETING01##
     
-    param_dict_0 = {'SLOPE':0.95837 , 'STD':0.011, 'A_DEC':1.433 ,'R_MIN':9.449, 'TAU':0.6}   # optimized params
+    #param_dict_0 = {'SLOPE':0.95837 , 'STD':0.011, 'A_DEC':1.433 ,'R_MIN':9.449, 'TAU':0.6}   # optimized params
     #param_dict_0 = {'SLOPE':0.816 , 'STD':0.350, 'A_DEC':2.851 ,'R_MIN':7.277, 'TAU':0.6}   # Paul's params
-    #param_dict_0 = {'SLOPE':0.82 , 'STD':0.285, 'A_DEC':3.099 ,'R_MIN':8.581, 'TAU':0.6}   # LiuYC's params
+    param_dict_0 = {'SLOPE':0.82 , 'STD':0.09, 'A_DEC':3.099 ,'R_MIN':8.581, 'TAU':0.6}   # LiuYC's params
     #param_dict_0 = {'SLOPE':0.779 , 'STD':0.212, 'A_DEC':4.475 ,'R_MIN':7.547, 'TAU':0.6}   # LuKC's params
     #param_dict_0 = {'SLOPE':0.8, 'STD':0.25, 'A_DEC':3.5 ,'R_MIN':7.0, 'TAU':0.6}   # average params
     step = "addALPHA_optimized"

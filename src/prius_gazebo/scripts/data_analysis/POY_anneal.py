@@ -22,7 +22,7 @@ from simanneal import Annealer
 
 
 POS_YIELD_THRESH = 0.8
-POS_PASS_THRESH = 0.5
+POS_PASS_THRESH = 0.2
 
 
 ###---- Using 1-D Arrays as input ---- ###
@@ -34,9 +34,11 @@ def CAR_yield_analysis(car_POS_list):
     POS_list = POS_list[::-1]
     current_list = np.array([])
 
-    current_list = (POS_list >= POS_YIELD_THRESH).astype(int)
+    CAR_list = (POS_list >= POS_YIELD_THRESH).astype(int)
+    diff_list = abs(POS_list - POS_YIELD_THRESH)
 
-    return current_list
+
+    return [CAR_list, diff_list]
 
 
 ###---- Using 1-D Arrays as input ---- ###
@@ -48,9 +50,10 @@ def CAR_pass_analysis(car_POS_list):
     POS_list = POS_list[::-1]
     current_list = np.array([])
 
-    current_list = (POS_list <= POS_PASS_THRESH).astype(int)
+    CAR_list = (POS_list <= POS_PASS_THRESH).astype(int)
+    diff_list = abs(POS_list - POS_PASS_THRESH)
 
-    return current_list
+    return [CAR_list, diff_list]
 
 
 class POYOptimizer(Annealer):
@@ -74,10 +77,6 @@ class POYOptimizer(Annealer):
         R_MIN = self.state[3]
         ALPHA = np.array([])
         #--- Get the estimated TTA ---#
-        '''
-        if (TTC_dif + 1) >= 0 : ALPHA = math.log(TTC_dif+1+math.exp(1), math.exp(1))
-        else : ALPHA = -999999   # -inf
-        '''
 
         R_I = 0.0
         if A_DEC == 0: pass
@@ -85,15 +84,15 @@ class POYOptimizer(Annealer):
         TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
         std = TTA_est * STD    # standard deviation of the PDF
 
-        ALPHA =  abs(TTC - TTA_est) * np.log(TTC_dif+1+np.exp(1)) 
-        #ALPHA = ( STD * 1.96 + abs(TTC - TTA_est) * (TTC_dif + 1) )
+        #ALPHA = abs(1+ min_TTC - TTA_est) * np.log(abs(TTC_dif+1) * np.exp(1) + 1)   
+        ALPHA = abs(1+ min_TTC - TTA_est) * np.log(abs(TTC_dif+1) * np.exp(1) + np.exp(1))   
+
         for i in range(len(TTC_dif)):
-            if (TTC_dif[i] + 1) < 1 : ALPHA[i] = -999999
+            if (TTC_dif[i] + 1) < 0 : ALPHA[i] = -ALPHA[i] 
 
         TTA_act = TTA_est + ALPHA   # mean of the PDF
         cdf = norm(TTA_act, std).cdf(min_TTC)
         
-        #print("[v_car={4:.2f}] cdf = {0:.2f}, min_TTC = {1:.2f}, TTA_est = {2:.2f}, TTC_dif = {3:.2f}".format(cdf, min_TTC, TTA_est, TTC_dif, v_car))
         return cdf
     
 
@@ -120,55 +119,6 @@ class POYOptimizer(Annealer):
         return judge_p_stop
 
 
-    '''
-    ###-------------------------------###
-    ###---Time to Action Estimation---###
-    ###- Using 1-D Arrays as input -- ###
-    def CDF(self, TTC, v_car, TTC_dif):
-        SLOPE = self.state[0]
-        STD = self.state[1]
-        A_DEC = self.state[2]
-        R_MIN = self.state[3]
-        ALPHA = np.array([])
-        #--- Get the estimated TTA ---#
-        R_I = 0.0
-        for ttc_dif in TTC_dif: 
-            if (ttc_dif + 1) >= 0 : ALPHA = np.append(ALPHA, math.log(ttc_dif + 1 + 4, 4), )
-            else : ALPHA = np.append(ALPHA, -999999, )   # -inf
-        
-        if A_DEC == 0: pass
-        else: R_I = v_car**2 / (2 * A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
-        std = TTA_est * STD    # standard deviation of the PDF
-
-        TTA_act = TTA_est * ALPHA   # mean of the PDF
-        cdf = norm(TTA_act, std).cdf(TTC)
-        
-        return cdf
-    
-
-    ###----------------------------------- ###
-    ###------Probability of Stopping------ ###
-    ###---- Using 1-D Arrays as input ---- ###
-    def POS(self, MIN_TTC, TTC, TTC_p, time, time_p, v_car):
-        #ALPHA = self.state[0]
-        p_stop = np.array([])
-
-        #--- Variables ---#
-        TTC_dif = (TTC - TTC_p) / (time - time_p)
-
-        #--- Probability of Stopping ---#
-        cdf_0 = self.CDF(MIN_TTC, v_car, TTC_dif)
-        judge_p_stop = (1 - cdf_0)
-        
-        for jps in judge_p_stop: 
-            if jps > 1 :
-                p_stop = np.append(p_stop, 1,)
-            else:
-                p_stop = np.append(p_stop, jps,)
-
-        return p_stop
-    '''
 
     def SaveTxtData(self):
 
@@ -265,7 +215,7 @@ class POYOptimizer(Annealer):
         SLOPE = [0.01, 1.0] 
         STD   = [0.01, 0.5] 
         A_DEC = [1.0, 8.0] 
-        R_MIN = [0.01, 15.0 ]
+        R_MIN = [4.48, 15.0 ]
         #TAU = np.arange(0.1, 1.2, 0.1)    
         #thresh = np.arange(0.1, 1.2, 0.1)    
         
@@ -305,18 +255,21 @@ class POYOptimizer(Annealer):
         CARarea = 0.0
         final_CAR_list = []
         summed_CAR_list = []
+        summed_diff_list = []
 
     # States(parameters) are updated every time self.POS is called
 
     # PAupdatesSS cases
         for key in self.pass_dict:
             pass_POS_list = self.get_POS_list( np.array(self.pass_dict[key][0]), np.array(self.pass_dict[key][1]), np.array(self.pass_dict[key][2]) )
-            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_pass_analysis(pass_POS_list), fillvalue=0) )
+            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_pass_analysis(pass_POS_list)[0], fillvalue=0) )
+            summed_diff_list = map( sum, itertools.izip_longest(summed_diff_list, CAR_pass_analysis(pass_POS_list)[1], fillvalue=0) )
             #final_CAR_list.append(CAR_pass_analysis(pass_POS_list))
     # YIELD cases
         for key in self.yield_dict:
             yield_POS_list = self.get_POS_list( np.array(self.yield_dict[key][0]), np.array(self.yield_dict[key][1]), np.array(self.yield_dict[key][2]) )
-            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_yield_analysis(yield_POS_list), fillvalue=0) )
+            summed_CAR_list = map( sum, itertools.izip_longest(summed_CAR_list, CAR_yield_analysis(yield_POS_list)[0], fillvalue=0) )
+            summed_diff_list = map( sum, itertools.izip_longest(summed_diff_list, CAR_yield_analysis(yield_POS_list)[1], fillvalue=0) )
             #final_CAR_list.append(CAR_yield_analysis(yield_POS_list))
 
         ''' Deprecated, might be useful when debugging
@@ -329,33 +282,36 @@ class POYOptimizer(Annealer):
 
     # Final calculation for area
         summed_CAR_list = np.array(summed_CAR_list) / float(self.total_file_num)
-        self.summed_list = summed_CAR_list
+        summed_diff_list = np.array(summed_diff_list) / float(self.total_file_num)
+        self.summed_list = summed_CAR_list    # for DEBUG
 
-        '''Weighting for T-minus from 0 to 2 secs 
+        '''Weighting for T-minus from 1.5 to 2.5 secs''' 
         LEN = len(summed_CAR_list)
-        WEIGHT = 1.0   # weight value 
-        PENALTY = 1.0   # penalty value 
-        weight_arr = np.append(np.ones([200])*WEIGHT, np.ones(LEN-200)*PENALTY,)
+        WEIGHT = 12   # weight value 
+        PENALTY = -4   # penalty value 
+        weight_arr = np.append(np.append(np.ones(150)*PENALTY, np.ones(250)*WEIGHT,) ,np.ones(LEN-400)*PENALTY,)
         summed_CAR_list = weight_arr*summed_CAR_list
-        '''
 
-        CARarea = sum(summed_CAR_list)
+        CARarea = -sum(summed_CAR_list)    # larger the better
+        CARareadiff = sum(summed_diff_list)   # smaller the better
 
         ''' SimAnnealing is for minimum, mazimum with negative sign
         '''
-        return -CARarea
+        return  CARarea 
+        #return (CARarea + CARareadiff)*0.1
 
 
 if __name__ == '__main__':
     # initial state, a randomly-ordered itinerary
     #init_state = [0.01, 0.3, 0.08, 8.5, 3.0]   # LiuYC's params
-    init_state = [0.3, 0.08, 8.5, 3.0]   # LiuYC's params
+    init_state = [0.3, 0.08, 8.5, 3.0]   # average params
 
     poyop = POYOptimizer(init_state)
-    poyop.steps = 3000
+    poyop.steps = 20000
     # Optimized Tmax, Tmin:steps:260.0, tmax:110.0, tmin:0.073, updates: 100
-    poyop.Tmax = 120
-    poyop.Tmin = 0.05 
+    trial = "lowerdiff"
+    poyop.Tmax = 115
+    poyop.Tmin = 0.05
     # since our state is just a list, slice is the fastest way to copy
     poyop.copy_strategy = "slice"
 
@@ -367,26 +323,26 @@ if __name__ == '__main__':
     print()
     print(" Final area under CAR curve : {0}\n".format(e) )
     #param_name = ['ALPHA', 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
-    param_name = [ 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
+    param_name = [ 'SLOPE', 'STD', 'A_DEC', 'R_MIN', "energy"]
     for i in range(len(state)):
         print(" {0} : {1}\t".format(param_name[i], state[i]))
     print("Tmax={0}, Tmin={1}, steps={2}".format(poyop.Tmax, poyop.Tmin, poyop.steps))
     print("Saving Optimized data into ods file.")
 
-    param_list = [state[0], state[1] ,state[2], state[3]]
+    param_list = [state[0], state[1] ,state[2], state[3], float(e)]
 
     data = get_data("SAparam.ods")
 
-    if "{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps) in data:
-        dum_data = data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)]
+    if "{0}-{1}_{2}-{3}_{4}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps, trial) in data:
+        dum_data = data["{0}-{1}_{2}-{3}_{4}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps, trial)]
         for j in range(len(dum_data)):
-            dum_data[j].append(state[j])
-        data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)] = dum_data
+            dum_data[j].append(param_list[j])
+        data["{0}-{1}_{2}-{3}_{4}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps, trial)] = dum_data
     else:
         dum_data = []
-        for k in range(len(state)):
+        for k in range(len(param_list)):
             dum_data.append([param_name[k], param_list[k]])
-        data["{0}-{1}_{2}-{3}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps)] = dum_data
+        data["{0}-{1}_{2}-{3}_{4}".format(poyop.driver_name, poyop.Tmax, poyop.Tmin, poyop.steps, trial)] = dum_data
 
     save_data("SAparam.ods", data)
 
@@ -414,3 +370,52 @@ if __name__ == '__main__':
 
     '''
 
+    '''
+    ###-------------------------------###
+    ###---Time to Action Estimation---###
+    ###- Using 1-D Arrays as input -- ###
+    def CDF(self, TTC, v_car, TTC_dif):
+        SLOPE = self.state[0]
+        STD = self.state[1]
+        A_DEC = self.state[2]
+        R_MIN = self.state[3]
+        ALPHA = np.array([])
+        #--- Get the estimated TTA ---#
+        R_I = 0.0
+        for ttc_dif in TTC_dif: 
+            if (ttc_dif + 1) >= 0 : ALPHA = np.append(ALPHA, math.log(ttc_dif + 1 + 4, 4), )
+            else : ALPHA = np.append(ALPHA, -999999, )   # -inf
+        
+        if A_DEC == 0: pass
+        else: R_I = v_car**2 / (2 * A_DEC)
+        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
+        std = TTA_est * STD    # standard deviation of the PDF
+
+        TTA_act = TTA_est * ALPHA   # mean of the PDF
+        cdf = norm(TTA_act, std).cdf(TTC)
+        
+        return cdf
+    
+
+    ###----------------------------------- ###
+    ###------Probability of Stopping------ ###
+    ###---- Using 1-D Arrays as input ---- ###
+    def POS(self, MIN_TTC, TTC, TTC_p, time, time_p, v_car):
+        #ALPHA = self.state[0]
+        p_stop = np.array([])
+
+        #--- Variables ---#
+        TTC_dif = (TTC - TTC_p) / (time - time_p)
+
+        #--- Probability of Stopping ---#
+        cdf_0 = self.CDF(MIN_TTC, v_car, TTC_dif)
+        judge_p_stop = (1 - cdf_0)
+        
+        for jps in judge_p_stop: 
+            if jps > 1 :
+                p_stop = np.append(p_stop, 1,)
+            else:
+                p_stop = np.append(p_stop, jps,)
+
+        return p_stop
+    '''
