@@ -104,10 +104,12 @@ class DataAnalysis:
         R_I = 0.0
         if self.A_DEC == 0: pass
         else: R_I = v_car**2 / (2 * self.A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car * self.SLOPE
+        TTA_est = (R_I + v_car*self.TAU + self.R_MIN ) / v_car + self.SLOPE
         std = TTA_est * self.STD    # standard deviation of the PDF
 
-        ALPHA = abs(std+ min_TTC - TTA_est)*np.log(abs(TTC_dif+1)*np.exp(1)+1) 
+        #ALPHA = (1.96*std)*np.log(abs(TTC_dif+1)*np.exp(1)+np.exp(1)) 
+        ALPHA = (2.32*std)*(abs(TTC_dif+1)+1) 
+        #ALPHA = (abs(min_TTC - TTA_est))*np.log(abs(TTC_dif+1)*np.exp(1)+1) 
         if (TTC_dif + 1) >= 0 : TTA_act = TTA_est + ALPHA  
         else : TTA_act = TTA_est - ALPHA
 

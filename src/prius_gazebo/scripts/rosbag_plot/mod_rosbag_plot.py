@@ -13,8 +13,8 @@ import math
 #--- Parameter Setting ---#
 
 update_rate = 10  # in millisec
-#style.use('seaborn-whitegrid')
-style.use('bmh')
+style.use('seaborn-whitegrid')
+#style.use('bmh')
 
 #-------------------------#
 
@@ -114,7 +114,7 @@ def rosbag_callback(pose, i):
 #--- Parameters ---#
 
 alpha = 0.3
-SLOPE = 0.778   # y = 0.65x + 0.15
+SLOPE = 0.05   # y = 0.65x + 0.15
 STD = .0807
 A_DEC = 4.475    # m/s^2
 R_MIN = 7.547    # meter
@@ -124,27 +124,28 @@ TAU = 0.6    # s
 ###-------------------------------###
 ###---Time to Action Estimation---###
 ###-------------------------------###
-def CDF(min_TTC, v_car, TTC_dif, TTC):
+def CDF( min_TTC, v_car, TTC_dif, TTC):
 
     #--- Get the estimated TTA ---#
-
 
     R_I = 0.0
     if A_DEC == 0: pass
     else: R_I = v_car**2 / (2 * A_DEC)
-    TTA_est = (R_I + v_car*TAU + R_MIN ) / v_car * SLOPE
+    TTA_est = (R_I + v_car*TAU + R_MIN ) / v_car + SLOPE
     std = TTA_est * STD    # standard deviation of the PDF
 
-    if (TTC_dif + 1) >= 0 : ALPHA = abs((TTC - TTA_est))*(TTC_dif+1)
-    else : ALPHA = -999999   # -inf
+    #ALPHA = (abs(min_TTC-TTA_est))*np.exp(abs(TTC_dif+1) )
+    #ALPHA = (2.32*std)*np.exp(abs(TTC_dif+1) )
+    ALPHA_p = (1.96*std)*np.log(abs(TTC_dif-0.6)*np.exp(1)+1) 
+    ALPHA_n = (abs(min_TTC - TTA_est))*np.log(abs(TTC_dif-0.6)*np.exp(1)+1) 
+    if (TTC_dif - 0.6 ) >= 0 : TTA_act = TTA_est + ALPHA_p
+    else : TTA_act = TTA_est - ALPHA_n
 
-    TTA_act = TTA_est + ALPHA   # mean of the PDF
     cdf = norm(TTA_act, std).cdf(min_TTC)
     
-    print("[v_car={4:.2f}] cdf = {0:.2f}, min_TTC = {1:.2f}, TTA_est = {2:.2f}, TTC_dif = {3:.2f}".format(cdf, TTC, TTA_est, TTC_dif, v_car))
+    print("[v_car={5:.2f}] cdf={0:.2f}, min_TTC={1:.2f}, TTA_est={2:.2f}, TTC={3:.2f}, TTC_dif={4:.2f}".format(cdf, min_TTC, TTA_est, TTC, TTC_dif, v_car))
     return cdf
-
-
+    
 ###----------------------------------- ###
 ###------Probability of Stopping------ ###
 ###----------------------------------- ###
@@ -152,21 +153,14 @@ def POS(min_TTC, TTC, TTC_p, time, time_p, v_car):
     
     #--- Variables ---#
     TTC_dif = (TTC - TTC_p) / (time - time_p)
-    
-    '''
-    #--- GAMMA ---#
-    if (TTC_dif + 1) < 0:
-        self.GAMMA = 0
-    else:
-        self.GAMMA = (TTC_dif + 1) * self.ALPHA
-    '''
 
     #--- Probability of Stopping ---#
     cdf_0 = CDF(min_TTC, v_car, TTC_dif, TTC)
     judge_p_stop = (1 - cdf_0)
-    p_stop = judge_p_stop
 
-    return p_stop
+    print("time:[{0:.3f}]; POY:{1:.3f}; v_car:{2:.3f}".format(time, judge_p_stop, v_car))
+    
+    return judge_p_stop
 
 
 ## Plotting Section
@@ -205,12 +199,12 @@ ax22.set_ylim(-0.2, 1.2)
 handles1=[line11, line12, line13, line14]
 labels1 = [h.get_label() for h in handles1]
 ax11.legend(handles=handles1, labels=labels1, loc='lower right')
-ax11.title.set_text("POS and Velocity Profile at real crossroads")
+ax11.title.set_text("POY and Velocity Profile at real crossroads")
 
 handles2=[line21, line22, line23, line24]
 labels2 = [h.get_label() for h in handles2]
 ax21.legend(handles=handles2, labels=labels2, loc='lower right')
-ax21.title.set_text("POS and Position Profile at real crossroads")
+ax21.title.set_text("POY and Position Profile at real crossroads")
 
 
 

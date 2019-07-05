@@ -72,29 +72,26 @@ class POYOptimizer(Annealer):
     ###---Time to Action Estimation---###
     ###-------------------------------###
     def CDF(self, min_TTC, v_car, TTC_dif, TTC):
-        DELTA = self.state[0]
+        SLOPE = self.state[0]
         STD = self.state[1]
         A_DEC = self.state[2]
         R_MIN = self.state[3]
         ALPHA = np.array([])
 
+        GAMMA = self.state[4]
         #--- Get the estimated TTA ---#
 
         R_I = 0.0
         if A_DEC == 0: pass
         else: R_I = v_car**2 / (2 * A_DEC)
-        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car + DELTA
+        TTA_est = (R_I + v_car*self.TAU + R_MIN ) / v_car * SLOPE
         std = TTA_est * STD    # standard deviation of the PDF
 
-        #ALPHA = ( 2.326*std ) * np.log(abs(TTC_dif+1) * np.exp(1) + 1)   
+        ALPHA = (abs( min_TTC - TTA_est+ 0.01) ) * np.log(abs(TTC_dif+1) * np.exp(1) + np.exp(GAMMA))   
         #ALPHA = abs(1+ min_TTC - TTA_est) * np.log(abs(TTC_dif+1) * np.exp(1) + np.exp(1))   
-        ALPHA_p = (std)*np.log(abs(TTC_dif-0.6)*np.exp(1)+1) 
-        ALPHA_n = (abs(min_TTC - TTA_est)+std)*np.log(abs(TTC_dif-0.6)*np.exp(1)+np.exp(1)) 
-        ALPHA = ALPHA_p
 
         for i in range(len(TTC_dif)):
-            #if (TTC_dif[i] + 1) < 0 : ALPHA[i] = -ALPHA[i] 
-            if (TTC_dif[i] - 0.6) < 0 : ALPHA[i] = -ALPHA_n[i] 
+            if (TTC_dif[i] + 1) < 0 : ALPHA[i] = -ALPHA[i] 
 
         TTA_act = TTA_est + ALPHA   # mean of the PDF
         cdf = norm(TTA_act, std).cdf(min_TTC)
@@ -130,8 +127,8 @@ class POYOptimizer(Annealer):
 
     # Open each file and save them as array
 
-        dir_name = "liuyc"
-        self.driver_name = "liuyc"
+        dir_name = "lukc"
+        self.driver_name = "lukc"
 
         path0 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius0'.format(dir_name, self.driver_name)
         path1 = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/*{1}*prius1'.format(dir_name, self.driver_name)
@@ -218,23 +215,25 @@ class POYOptimizer(Annealer):
 
         #arange(upper, lower, step)
         #ALPHA = [0.01, 3.0] 
-        DELTA = [-5, 5] 
+        SLOPE = [0.01, 1.2] 
         STD   = [0.01, 0.5] 
         A_DEC = [1.0, 8.0] 
         R_MIN = [4.48, 15.0 ]
         #TAU = np.arange(0.1, 1.2, 0.1)    
         #thresh = np.arange(0.1, 1.2, 0.1)    
+        GAMMA = [0, 10]    
 
         
         ''' semi-continuous random 
         '''
         #r1 = random.uniform(ALPHA[0], ALPHA[1])
-        r2 = random.uniform(DELTA[0], DELTA[1])
+        r2 = random.uniform(SLOPE[0], SLOPE[1])
         r3 = random.uniform(STD[0], STD[1])
         r4 = random.uniform(A_DEC[0], A_DEC[1])
         r5 = random.uniform(R_MIN[0], R_MIN[1])
         #r6 = random.uniform(TAU[0], TAU[1])
         #r7 = random.uniform(thresh[0], thresh[1])
+        r8 = random.uniform(GAMMA[0], GAMMA[1])
         
         ''' discrete random 
         #r1_list = np.arange(ALPHA[0], ALPHA[1], 0.2)
@@ -254,7 +253,7 @@ class POYOptimizer(Annealer):
         '''
 
         #self.state = [0.01, r2, r3, r4, r5]
-        self.state = [r2, r3, r4, r5]
+        self.state = [r2, r3, r4, r5, 1.1]
 
 
 
@@ -309,19 +308,19 @@ class POYOptimizer(Annealer):
         '''
         #return  CARarea
         self.CARareadiff = CARareadiff
-        return (CARarea + CARareadiff)   # * 0.01
+        return (CARarea + 3 * CARareadiff)   # * 0.01
 
 
 if __name__ == '__main__':
     # initial state, a randomly-ordered itinerary
     #init_state = [0.01, 0.3, 0.08, 8.5, 3.0]   # LiuYC's params
-    init_state = [1, 0.08, 8.5, 3.0]   # average params
+    init_state = [0.3, 0.08, 8.5, 3.0, 1]   # average params
 
 
     poyop = POYOptimizer(init_state)
-    poyop.steps = 50077
+    poyop.steps = 20077
     # Optimized Tmax, Tmin:steps:260.0, tmax:110.0, tmin:0.073, updates: 100
-    trial = "1area1diff(4params)"
+    trial = "1area3diff(4params)"
     poyop.Tmax = 115
     poyop.Tmin = 0.05
     # since our state is just a list, slice is the fastest way to copy
@@ -335,14 +334,14 @@ if __name__ == '__main__':
     print()
     print(" Final area under CAR curve : {0}\n".format(e) )
     #param_name = ['ALPHA', 'SLOPE', 'STD', 'A_DEC', 'R_MIN']
-    param_name = [ 'DELTA', 'STD', 'A_DEC', 'R_MIN', 'WEIGHT', 'PENALTY',"energy"]
+    param_name = [ 'SLOPE', 'STD', 'A_DEC', 'R_MIN', 'GAMMA', 'WEIGHT', 'PENALTY',"energy"]
 
     for i in range(len(state)):
         print(" {0} : {1}\t".format(param_name[i], state[i]))
     print("Tmax={0}, Tmin={1}, steps={2}".format(poyop.Tmax, poyop.Tmin, poyop.steps))
     print("Saving Optimized data into ods file.")
 
-    param_list = [state[0], state[1] ,state[2], state[3], poyop.WEIGHT, poyop.PENALTY,float(e)]
+    param_list = [state[0], state[1] ,state[2], state[3], state[4], poyop.WEIGHT, poyop.PENALTY,float(e)]
 
 
     data = get_data("SAparam.ods")

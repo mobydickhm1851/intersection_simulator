@@ -312,19 +312,22 @@ class TxtData:
             R_MIN = ave_R_MIN
             average_acc = ave_A_DEC
     # SLOPE 
+            R_I_mea = abs(self.car_pose_list[ave_begin_end[1]]-self.car_pose_list[ave_begin_end[0]])
+            TTA_est_mea = (R_I_mea + v_TTA*self.TAU + R_MIN ) / v_TTA
             R_I = v_TTA**2 / (2 * abs(average_acc))
             TTA_est = (R_I + v_TTA*self.TAU + R_MIN ) / v_TTA
-            slope = TTA / TTA_est
+            slope = TTA / TTA_est_mea
+            l_slope = TTA / TTA_est
             #print("R_I is {0}. v_TTA is {1}. ".format(R_I, v_TTA))
         
-            return {"slope":slope}
+            return {"slope":slope, "l_slope":l_slope}
 
 
 if __name__ == '__main__':
 
-    dir_name = "param_test"
+    dir_name = "param_test/maxV_10"
     driver_name = "lukc"
-    N = 50    # How many 
+    N = 5    # How many 
 
     path = '/home/liuyc/moby_ws/intersection_simulator/src/prius_gazebo/scripts/data_analysis/txt_datas/{0}/{1}*'.format(dir_name, driver_name)
     files = glob.glob(path)
@@ -450,8 +453,9 @@ if __name__ == '__main__':
             # Get the final lists (x or y)
                 prius0.get_final_list()
             # Get acceleration list
-                params = prius0.get_param(prius0_file_name, True, ave_riA_DEC, ave_R_MIN)
+                params = prius0.get_param(prius0_file_name, True, ave_A_DEC, ave_R_MIN)
             tuned_SLOPE_list.append(float(params["slope"]))  
+            SLOPE_list.append(float(params["l_slope"]))
 
             print("Got {0}_{1}'s param. TTA/TTA_est(slope) = {2}\n".format(driver_names, i+1,  params["slope"]))
 
@@ -459,6 +463,8 @@ if __name__ == '__main__':
 # average and std parameters list
     tuned_ave_SLOPE = sum(tuned_SLOPE_list) / len(tuned_SLOPE_list)
     sigma_tuned_SLOPE = getSTD(tuned_SLOPE_list, tuned_ave_SLOPE)
+    ave_SLOPE = sum(SLOPE_list) / len(SLOPE_list)
+    sigma_SLOPE = getSTD(SLOPE_list, ave_SLOPE)
 
 ######################################################################
 
@@ -472,6 +478,7 @@ if __name__ == '__main__':
     tuned_SLOPE_list.insert(0,"tuned_SLOPE")
     TTA_list.insert(0,"TTA")
     v_TTA_list.insert(0,"v_TTA")
+    SLOPE_list.insert(0,"l_SLOPE")
 
 # append average
     trial_num_list.append("{0} Average".format(driver_name))
@@ -483,6 +490,7 @@ if __name__ == '__main__':
     tuned_SLOPE_list.append(float(tuned_ave_SLOPE))
     TTA_list.append(float(ave_TTA))
     v_TTA_list.append(float(ave_v_TTA))
+    SLOPE_list.append(float(ave_SLOPE))
             
 # append average
     trial_num_list.append("{0} sigma (std)".format(driver_name))
@@ -494,11 +502,12 @@ if __name__ == '__main__':
     tuned_SLOPE_list.append(float(sigma_tuned_SLOPE))
     TTA_list.append(float(sigma_TTA))
     v_TTA_list.append(float(sigma_v_TTA))
+    SLOPE_list.append(float(sigma_SLOPE))
 
 
-    final_param_list = [trial_num_list]+[tuned_SLOPE_list]+[riA_DEC_list]+[R_MIN_list]+[TTA_list]+[v_TTA_list]+[A_DEC_list]+[riR_MIN_list]+[R_I_list]
+    final_param_list = [trial_num_list]+[tuned_SLOPE_list]+[riA_DEC_list]+[R_MIN_list]+[SLOPE_list]+[TTA_list]+[v_TTA_list]+[A_DEC_list]+[riR_MIN_list]+[R_I_list]
 
     data = get_data("param_results.ods")
-    data["{0}_param_{1}".format(driver_name, 9)] = final_param_list
+    data["{0}_param_{1}".format(driver_name, "maxV_10")] = final_param_list
     save_data("param_results.ods", data)
     
